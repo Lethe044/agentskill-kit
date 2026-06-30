@@ -90,6 +90,7 @@ Quality score: 1.00 | Skills written: 1 | Published: 1
 | `web-summarizer` | Fetch text → 3 bullet summary | Easy |
 | `log-analyzer` | Parse logs → count errors by type | Medium |
 | `code-reviewer` | Detect code smells automatically | Medium |
+| `hermes-tweet` | X/Twitter search, monitoring, publishing, and account-safe action gates | Medium |
 
 ## Project Structure
 
@@ -102,6 +103,7 @@ graph LR
     A --> F[docs/]
 
     B --> B1[skill-forge/SKILL.md<br/>Agent playbook]
+    B --> B2[hermes-tweet/SKILL.md<br/>Social automation skill]
     C --> C1[skill_forge_env.py<br/>Atropos RL environment]
     C --> C2[skill_forge_config.yaml<br/>Training config]
     D --> D1[demo_skill_forge.py<br/>Standalone demo]
