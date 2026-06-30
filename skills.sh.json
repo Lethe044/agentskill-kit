@@ -1,0 +1,17 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "Skill Forge",
+      "skills": [
+        "skill-forge"
+      ]
+    },
+    {
+      "title": "Social Media & Automation",
+      "skills": [
+        "hermes-tweet"
+      ]
+    }
+  ]
+}
