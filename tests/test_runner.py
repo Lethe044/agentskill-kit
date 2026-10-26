@@ -34,6 +34,11 @@ class SandboxTests(TempDirTest):
         res = sandbox.run_python(["-c", "print('x' * 100000)"], self.tmp)
         self.assertLess(len(res.stdout), sandbox.MAX_OUTPUT + 100)
 
+    def test_windows_line_endings_are_normalized(self):
+        code = "import sys; sys.stdout.buffer.write(b'a\\r\\nb\\r\\n'); sys.stderr.buffer.write(b'e\\r\\n')"
+        res = sandbox.run_python(["-c", code], self.tmp)
+        self.assertEqual((res.stdout, res.stderr), ("a\nb\n", "e\n"))
+
     def test_scratch_copy_leaves_original_alone(self):
         d = self.make_skill("copy-me")
         with sandbox.scratch_copy(d) as c:

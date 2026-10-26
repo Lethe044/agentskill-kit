@@ -65,6 +65,8 @@ def _limit_resources(timeout: float, mem_mb: int):
 
 
 def _trim(text: str) -> str:
+    # Windows consoles turn "\n" into "\r\n"; tests should see the same text everywhere.
+    text = text.replace("\r\n", "\n")
     return text if len(text) <= MAX_OUTPUT else text[:MAX_OUTPUT] + "\n...[output truncated]"
 
 
