@@ -359,7 +359,9 @@ def iter_skill_files(skill_dir: Any) -> List[Path]:
         if any(part in SKIP_DIRS for part in rel.parts[:-1]) or p.suffix in SKIP_SUFFIXES:
             continue
         out.append(rel)
-    return out
+    # Sort by the posix string: Path ordering is case-insensitive on Windows, which
+    # would change the file order (and so the registry index) between systems.
+    return sorted(out, key=lambda p: p.as_posix())
 
 
 def slugify(text: str, max_len: int = 64) -> str:
