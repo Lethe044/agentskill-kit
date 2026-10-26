@@ -1,0 +1,24 @@
+{
+  "entry": "scripts/json_diff.py",
+  "cases": [
+    {"name": "reports added, removed and changed values", "kind": "happy", "args": ["a.json", "b.json"], "expect_exit": 1,
+     "files": {"a.json": "{\"name\": \"x\", \"port\": 80, \"debug\": true}", "b.json": "{\"name\": \"x\", \"port\": 8080, \"tls\": true}"},
+     "stdout_json": {"identical": false, "count": 3, "changes": [
+       {"path": "debug", "change": "removed", "old": true},
+       {"path": "port", "change": "changed", "old": 80, "new": 8080},
+       {"path": "tls", "change": "added", "new": true}]}},
+    {"name": "ignores key order", "kind": "happy", "args": ["a.json", "b.json"], "expect_exit": 0,
+     "files": {"a.json": "{\"a\": 1, \"b\": 2}", "b.json": "{\"b\": 2, \"a\": 1}"},
+     "stdout_json": {"identical": true, "count": 0}},
+    {"name": "walks into arrays", "kind": "edge", "args": ["a.json", "b.json"], "expect_exit": 1,
+     "files": {"a.json": "{\"users\": [{\"id\": 1}, {\"id\": 2}]}", "b.json": "{\"users\": [{\"id\": 1}]}"},
+     "stdout_json": {"changes": [{"path": "users[1]", "change": "removed", "old": {"id": 2}}]}},
+    {"name": "detects a type change", "kind": "edge", "args": ["a.json", "b.json"], "expect_exit": 1,
+     "files": {"a.json": "{\"n\": 1}", "b.json": "{\"n\": \"1\"}"},
+     "stdout_json": {"changes": [{"path": "n", "change": "changed", "old": 1, "new": "1"}]}},
+    {"name": "invalid json", "kind": "error", "args": ["a.json", "b.json"], "expect_exit": 3,
+     "files": {"a.json": "{oops", "b.json": "{}"}, "stderr_contains": "invalid JSON"},
+    {"name": "missing file", "kind": "error", "args": ["x.json", "y.json"], "expect_exit": 2,
+     "stderr_contains": "file not found"}
+  ]
+}

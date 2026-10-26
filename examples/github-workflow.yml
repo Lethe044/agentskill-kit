@@ -1,0 +1,17 @@
+# Copy to .github/workflows/skills.yml in a repository that contains skills.
+name: Skills
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Lethe044/agentskill-kit@main
+        with:
+          path: skills
+          strict: "true"
+          scan-fail-on: medium

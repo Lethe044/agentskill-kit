@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<meta name="description" content="Search, vet and install agent skills. Every skill is linted, security scanned and tested.">
+<style>
+:root{
+  --bg:#e9edf1; --surface:#ffffff; --ink:#0f1b26; --muted:#55626f; --line:#cbd3db; --accent:#2b4bdb;
+  --accent-ink:#ffffff; --code:#eef1f5; --a:#0e7a5f; --b:#3f7d1c; --c:#9a6700; --d:#b4540a; --f:#b3261e;
+  --shadow:0 1px 0 rgba(15,27,38,.04);
+  --font:"Avenir Next","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e141b; --surface:#151d26; --ink:#e6edf3; --muted:#93a1af; --line:#27323d; --accent:#7c96ff;
+    --accent-ink:#0e141b; --code:#0f161d; --a:#4cc9a6; --b:#9bd35a; --c:#e0b341; --d:#f08a45; --f:#ff7b72;
+    --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e141b; --surface:#151d26; --ink:#e6edf3; --muted:#93a1af; --line:#27323d; --accent:#7c96ff;
+  --accent-ink:#0e141b; --code:#0f161d; --a:#4cc9a6; --b:#9bd35a; --c:#e0b341; --d:#f08a45; --f:#ff7b72;
+  --shadow:none; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font);
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+a{color:var(--accent)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0}
+.brand{font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand small{font-weight:500;color:var(--muted);margin-left:10px;font-size:14px}
+nav.links{display:flex;gap:18px;font-size:14px}
+nav.links a{color:var(--muted);text-decoration:none}
+nav.links a:hover{color:var(--ink);text-decoration:underline}
+.hero{padding:34px 0 18px}
+.hero h1{margin:0 0 18px;font-size:clamp(30px,5vw,50px);line-height:1.06;letter-spacing:-.025em;font-weight:700;max-width:16em}
+.search{display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--ink);border-radius:6px;
+  padding:0 16px;box-shadow:var(--shadow)}
+.search input{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;font-size:20px;padding:18px 0;min-width:0}
+.search input:focus{outline:none}
+.search:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.search kbd{font:12px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:2px 7px}
+.cmdline{display:flex;align-items:center;gap:12px;margin-top:12px;padding:11px 14px;background:var(--code);
+  border:1px solid var(--line);border-radius:6px;font:14px var(--mono);overflow:hidden}
+.cmdline code{flex:1;white-space:nowrap;overflow:auto;scrollbar-width:none}
+.cmdline code::-webkit-scrollbar{display:none}
+.copy{border:1px solid var(--line);background:var(--surface);border-radius:5px;padding:4px 10px;font-size:13px}
+.copy:hover{border-color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0 6px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 12px;font-size:14px;color:var(--muted)}
+.chip:hover{color:var(--ink);border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sort{margin-left:auto;font-size:14px;color:var(--muted)}
+.sort select{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:4px 8px;font:inherit}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;padding-bottom:64px}
+.layout.open{grid-template-columns:minmax(0,1fr) minmax(0,520px)}
+.count{font-size:14px;color:var(--muted);margin:10px 0}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:16px;align-items:start;width:100%;text-align:left;
+  padding:16px 18px;border:0;border-bottom:1px solid var(--line);background:transparent}
+.row:last-child{border-bottom:0}
+.row:hover,.row[aria-current="true"]{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.grade{width:44px;height:44px;border:2px solid currentColor;border-radius:6px;display:grid;place-items:center;
+  font-weight:800;font-size:20px}
+.g-A{color:var(--a)}.g-B{color:var(--b)}.g-C{color:var(--c)}.g-D{color:var(--d)}.g-F{color:var(--f)}
+.name{font-weight:650;font-size:17px;letter-spacing:-.01em}
+.desc{color:var(--muted);font-size:15px;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 7px}
+.facts{font-size:13px;color:var(--muted);text-align:right;white-space:nowrap;line-height:1.6}
+.facts b{color:var(--ink);font-weight:600}
+.empty{padding:36px 18px;color:var(--muted)}
+aside.panel{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);
+  border:1px solid var(--line);border-radius:6px;padding:22px}
+aside.panel[hidden]{display:none}
+.panel h2{margin:0;font-size:24px;letter-spacing:-.02em}
+.panel .meta{color:var(--muted);font-size:14px;margin:4px 0 14px}
+.close{float:right;border:1px solid var(--line);background:transparent;border-radius:5px;padding:2px 10px;font-size:14px}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.check{border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.check b{display:block;font-size:18px;color:var(--ink)}
+.install{margin:14px 0}
+.install .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.install .tabs button{border:1px solid var(--line);background:transparent;border-radius:5px;padding:2px 9px;font-size:13px;color:var(--muted)}
+.install .tabs button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+.md h1,.md h2,.md h3{letter-spacing:-.01em;line-height:1.25;margin:20px 0 8px}
+.md h1{font-size:20px}.md h2{font-size:17px}.md h3{font-size:15px}
+.md p,.md li{font-size:15px;max-width:70ch}
+.md code{font:13px var(--mono);background:var(--code);border-radius:4px;padding:1px 5px}
+.md pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow:auto}
+.md pre code{background:none;padding:0}
+.md blockquote{margin:10px 0;padding-left:12px;border-left:3px solid var(--line);color:var(--muted)}
+.files{font:13px var(--mono);color:var(--muted);margin:6px 0 0;padding-left:18px}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;padding:22px 0 40px}
+@media (max-width:900px){
+  .layout.open{grid-template-columns:minmax(0,1fr)}
+  aside.panel{position:fixed;inset:env(safe-area-inset-top,0px) 0 0 0;max-height:none;z-index:5;border-radius:0;
+    padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+  .row{grid-template-columns:44px minmax(0,1fr)}
+  .facts{grid-column:2;text-align:left}
+  .wrap{padding:0 16px}
+}
+@media (prefers-reduced-motion:no-preference){aside.panel{animation:slide .16s ease-out}}
+@keyframes slide{from{opacity:.4;transform:translateX(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">agentskill-kit<small id="meta"></small></div>
+    <nav class="links">
+      <a href="https://github.com/Lethe044/agentskill-kit">GitHub</a>
+      <a href="https://pypi.org/project/agentskill-kit/">PyPI</a>
+      <a href="https://github.com/Lethe044/agentskill-kit/blob/main/CONTRIBUTING.md">Add a skill</a>
+    </nav>
+  </header>
+  <section class="hero">
+    <h1>Agent skills you can check before you install them</h1>
+    <label class="search"><input id="q" type="search" placeholder="Search skills: logs, docker, commit, csv" autocomplete="off" aria-label="Search skills"><kbd>/</kbd></label>
+    <div class="cmdline"><code id="cmd">pip install agentskill-kit</code><button class="copy" id="copycmd" type="button">Copy</button></div>
+    <div class="filters" id="filters"></div>
+  </section>
+  <div class="layout" id="layout">
+    <main>
+      <div class="count" id="count"></div>
+      <div class="list" id="list"></div>
+    </main>
+    <aside class="panel" id="panel" hidden aria-label="Skill details"></aside>
+  </div>
+  <footer>Scores combine lint, security scan, bundled tests and documentation. They are signals, not guarantees: read a skill before you let an agent run it.</footer>
+</div>
+<script id="askit-data" type="application/json">__DATA__</script>
+<script>
+(function(){
+  var DATA = JSON.parse(document.getElementById('askit-data').textContent);
+  var skills = DATA.skills || [];
+  var state = {q:'', tag:'', sort:'score', open:null, target:'claude'};
+  var TARGETS = ['claude','cursor','codex','copilot','windsurf','gemini','hermes'];
+  var $ = function(id){return document.getElementById(id)};
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function tokens(s){return String(s).toLowerCase().match(/[a-z0-9]+/g)||[]}
+
+  function score(s, q){
+    var t = tokens(q); if(!t.length) return 1;
+    var n = tokens(s.name.replace(/-/g,' ')), g = tokens((s.tags||[]).join(' ')), d = tokens(s.description||'');
+    var total = 0;
+    t.forEach(function(w){
+      var v = 0;
+      if(n.indexOf(w)>-1) v += 3; if(g.indexOf(w)>-1) v += 2; if(d.indexOf(w)>-1) v += 1;
+      if(!v){ if(n.concat(g).some(function(x){return x.indexOf(w)===0})) v += 1.5;
+              else if(d.some(function(x){return x.indexOf(w)===0})) v += .5; }
+      total += v;
+    });
+    return total;
+  }
+  function visible(){
+    var out = skills.filter(function(s){ return !state.tag || (s.tags||[]).indexOf(state.tag)>-1; })
+      .map(function(s){return {s:s, k:score(s,state.q)}}).filter(function(x){return x.k>0});
+    out.sort(function(a,b){
+      if(state.q && b.k!==a.k) return b.k-a.k;
+      if(state.sort==='name') return a.s.name.localeCompare(b.s.name);
+      return (b.s.score||0)-(a.s.score||0) || a.s.name.localeCompare(b.s.name);
+    });
+    return out.map(function(x){return x.s});
+  }
+  function installCmd(s, target){
+    return 'askit install ' + s.name + (target && target!=='claude' ? ' --target ' + target : '');
+  }
+  function md(src){
+    var lines = String(src||'').replace(/\r/g,'').split('\n'), out = [], i = 0, list = null, para = [];
+    function inline(t){
+      t = esc(t);
+      t = t.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+           .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g,'$1<em>$2</em>')
+           .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" rel="noopener">$1</a>');
+      return t;
+    }
+    function flushP(){ if(para.length){ out.push('<p>'+inline(para.join(' '))+'</p>'); para=[]; } }
+    function flushL(){ if(list){ out.push('</'+list+'>'); list=null; } }
+    while(i<lines.length){
+      var ln = lines[i], m;
+      if(/^\s*```/.test(ln)){
+        flushP(); flushL(); var buf=[]; i++;
+        while(i<lines.length && !/^\s*```/.test(lines[i])){ buf.push(lines[i]); i++; }
+        out.push('<pre><code>'+esc(buf.join('\n'))+'</code></pre>'); i++; continue;
+      }
+      if((m = ln.match(/^(#{1,3})\s+(.*)$/))){ flushP(); flushL(); out.push('<h'+m[1].length+'>'+inline(m[2])+'</h'+m[1].length+'>'); i++; continue; }
+      if((m = ln.match(/^\s*[-*]\s+(.*)$/))){ flushP(); if(list!=='ul'){flushL(); out.push('<ul>'); list='ul';} out.push('<li>'+inline(m[1])+'</li>'); i++; continue; }
+      if((m = ln.match(/^\s*\d+\.\s+(.*)$/))){ flushP(); if(list!=='ol'){flushL(); out.push('<ol>'); list='ol';} out.push('<li>'+inline(m[1])+'</li>'); i++; continue; }
+      if((m = ln.match(/^>\s?(.*)$/))){ flushP(); flushL(); out.push('<blockquote>'+inline(m[1])+'</blockquote>'); i++; continue; }
+      if(!ln.trim()){ flushP(); flushL(); i++; continue; }
+      if(list && /^\s+/.test(ln)){ out[out.length-1] = out[out.length-1].replace(/<\/li>$/,' '+inline(ln.trim())+'</li>'); i++; continue; }
+      flushL(); para.push(ln.trim()); i++;
+    }
+    flushP(); flushL(); return out.join('\n');
+  }
+  function copy(text, btn){
+    function done(){ var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function(){btn.textContent = o}, 1200); }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, fallback); } else fallback();
+    function fallback(){ var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
+      try{document.execCommand('copy'); done();}catch(e){} document.body.removeChild(t); }
+  }
+  function renderFilters(){
+    var counts = {}; skills.forEach(function(s){(s.tags||[]).forEach(function(t){counts[t]=(counts[t]||0)+1})});
+    var tags = Object.keys(counts).sort(function(a,b){return counts[b]-counts[a]||a.localeCompare(b)}).slice(0,14);
+    var html = '<button class="chip" type="button" data-tag="" aria-pressed="'+(!state.tag)+'">All</button>';
+    tags.forEach(function(t){ html += '<button class="chip" type="button" data-tag="'+esc(t)+'" aria-pressed="'+(state.tag===t)+'">'+esc(t)+'</button>'; });
+    html += '<label class="sort">Sort <select id="sort"><option value="score">Quality</option><option value="name">Name</option></select></label>';
+    $('filters').innerHTML = html; $('sort').value = state.sort;
+  }
+  function renderList(){
+    var items = visible();
+    $('count').textContent = items.length + (items.length===1 ? ' skill' : ' skills') + (state.q ? ' for "' + state.q + '"' : '');
+    if(!items.length){ $('list').innerHTML = '<div class="empty">Nothing matches. Try a broader word, or clear the tag filter.</div>'; updateCmd(null); return; }
+    $('list').innerHTML = items.map(function(s){
+      var tests = s.tested ? (s.tests_passed + '/' + s.tests_total + ' tests') : 'instructions only';
+      return '<button class="row" type="button" data-name="'+esc(s.name)+'" aria-current="'+(state.open===s.name)+'">'+
+        '<div class="grade g-'+esc(s.grade)+'" title="Quality score '+Math.round((s.score||0)*100)+'">'+esc(s.grade)+'</div>'+
+        '<div><div class="name">'+esc(s.name)+'</div><div class="desc">'+esc(s.description)+'</div>'+
+        '<div class="tags">'+(s.tags||[]).slice(0,5).map(function(t){return '<span class="tag">'+esc(t)+'</span>'}).join('')+'</div></div>'+
+        '<div class="facts"><b>'+Math.round((s.score||0)*100)+'</b> score<br>'+esc(tests)+'<br>v'+esc(s.version||'0.0.0')+'</div></button>';
+    }).join('');
+    updateCmd(items[0]);
+  }
+  function updateCmd(s){ $('cmd').textContent = s ? installCmd(s, state.target) : 'pip install agentskill-kit'; }
+  function renderPanel(){
+    var s = skills.filter(function(x){return x.name===state.open})[0], p = $('panel');
+    if(!s){ p.hidden = true; $('layout').className = 'layout'; return; }
+    p.hidden = false; $('layout').className = 'layout open';
+    var sc = s.scan || {high:0,medium:0,low:0};
+    p.innerHTML = '<button class="close" type="button" id="close">Close</button>'+
+      '<h2>'+esc(s.name)+'</h2><div class="meta">Version '+esc(s.version||'0.0.0')+(s.author?' by '+esc(s.author):'')+(s.license?', '+esc(s.license):'')+'</div>'+
+      '<p>'+esc(s.description)+'</p>'+
+      '<div class="checks"><div class="check"><b class="g-'+esc(s.grade)+'">'+esc(s.grade)+' ('+Math.round((s.score||0)*100)+')</b>quality</div>'+
+      '<div class="check"><b>'+(s.tested ? s.tests_passed+'/'+s.tests_total : 'none')+'</b>bundled tests</div>'+
+      '<div class="check"><b>'+sc.high+' high, '+sc.medium+' medium</b>security findings</div></div>'+
+      '<div class="install"><div class="tabs">'+TARGETS.map(function(t){return '<button type="button" data-target="'+t+'" aria-pressed="'+(state.target===t)+'">'+t+'</button>'}).join('')+'</div>'+
+      '<div class="cmdline"><code>'+esc(installCmd(s, state.target))+'</code><button class="copy" type="button" id="copyinstall">Copy</button></div></div>'+
+      '<div class="md">'+md(s.body)+'</div>'+
+      '<h3>Files</h3><ul class="files">'+(s.files||[]).map(function(f){return '<li>'+esc(f.path)+'</li>'}).join('')+'</ul>';
+    $('close').onclick = function(){ state.open = null; renderPanel(); renderList(); };
+    $('copyinstall').onclick = function(){ copy(installCmd(s, state.target), $('copyinstall')); };
+    Array.prototype.forEach.call(p.querySelectorAll('[data-target]'), function(b){
+      b.onclick = function(){ state.target = b.getAttribute('data-target'); renderPanel(); updateCmd(s); };
+    });
+  }
+  $('q').addEventListener('input', function(e){ state.q = e.target.value; renderList(); });
+  $('q').addEventListener('keydown', function(e){ if(e.key==='Enter'){ var v = visible()[0]; if(v){ state.open = v.name; renderPanel(); renderList(); } } });
+  $('list').addEventListener('click', function(e){
+    var r = e.target.closest('.row'); if(!r) return; state.open = r.getAttribute('data-name'); renderPanel(); renderList();
+    if(window.innerWidth<=900) $('panel').scrollTop = 0;
+  });
+  $('filters').addEventListener('click', function(e){
+    var c = e.target.closest('[data-tag]'); if(!c) return; state.tag = c.getAttribute('data-tag'); renderFilters(); renderList();
+  });
+  $('filters').addEventListener('change', function(e){ if(e.target.id==='sort'){ state.sort = e.target.value; renderList(); } });
+  $('copycmd').onclick = function(){ copy($('cmd').textContent, $('copycmd')); };
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==$('q')){ e.preventDefault(); $('q').focus(); }
+    if(e.key==='Escape' && state.open){ state.open = null; renderPanel(); renderList(); }
+  });
+  $('meta').textContent = skills.length + ' skills';
+  renderFilters(); renderList();
+})();
+</script>
+</body>
+</html>

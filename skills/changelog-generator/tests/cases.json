@@ -1,0 +1,17 @@
+{
+  "entry": "scripts/make_changelog.py",
+  "cases": [
+    {"name": "groups commits by type", "kind": "happy", "args": ["--title", "v1.1.0"],
+     "stdin": "a1b2c3d|feat(cli): add export command\nd4e5f6a|fix: handle empty input\n0a0b0c0|docs: update readme\n",
+     "stdout_contains": ["# v1.1.0", "## Features", "- **cli:** add export command (a1b2c3d)", "## Fixes", "- handle empty input (d4e5f6a)", "## Documentation"]},
+    {"name": "breaking marker goes first", "kind": "edge",
+     "stdin": "1111111|feat!: drop python 3.8\n2222222|fix: typo\n",
+     "stdout_regex": ["## Breaking changes\\n- drop python 3.8 \\(1111111\\)"]},
+    {"name": "unknown prefixes land in Other", "kind": "edge",
+     "stdin": "3333333|update stuff\n4444444|chore: bump deps\n",
+     "stdout_contains": ["## Other", "- update stuff (3333333)", "- bump deps (4444444)"], "stdout_not_contains": "## Features"},
+    {"name": "empty input", "kind": "edge", "stdin": "", "stdout_contains": ["# Changelog", "No commits found."]},
+    {"name": "lines without separator are ignored", "kind": "error", "stdin": "not a log line\n5555555|fix: real one\n",
+     "stdout_contains": "real one", "stdout_not_contains": "not a log line"}
+  ]
+}

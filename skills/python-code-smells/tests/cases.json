@@ -1,0 +1,18 @@
+{
+  "entry": "scripts/smells.py",
+  "cases": [
+    {"name": "flags bare except and mutable default", "kind": "happy", "args": ["sample.py"], "expect_exit": 1,
+     "files": {"sample.py": "def load(items=[]):\n    \"\"\"Load.\"\"\"\n    try:\n        return items[0]\n    except:\n        return None\n"},
+     "stdout_regex": ["\"rule\": \"bare-except\"", "\"rule\": \"mutable-default\""]},
+    {"name": "clean file has no findings", "kind": "happy", "args": ["clean.py"], "expect_exit": 0,
+     "files": {"clean.py": "def add(a, b):\n    \"\"\"Add two numbers.\"\"\"\n    return a + b\n"},
+     "stdout_json": {"files": 1, "findings": []}},
+    {"name": "private functions need no docstring", "kind": "edge", "args": ["priv.py"], "expect_exit": 0,
+     "files": {"priv.py": "def _helper():\n    return 1\n"},
+     "stdout_json": {"findings": []}},
+    {"name": "reports syntax errors", "kind": "edge", "args": ["broken.py"], "expect_exit": 1,
+     "files": {"broken.py": "def oops(:\n"}, "stdout_contains": "syntax-error"},
+    {"name": "missing path", "kind": "error", "args": ["nope.py"], "expect_exit": 2,
+     "stderr_contains": "path not found"}
+  ]
+}

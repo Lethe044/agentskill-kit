@@ -1,0 +1,71 @@
+name: agentskill-kit
+description: Lint, security scan and test agent skills (SKILL.md) in your repository.
+author: Lethe044
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  path:
+    description: Folder that contains skills, or a single skill folder.
+    default: "."
+  strict:
+    description: Treat lint warnings as errors ("true" or "false").
+    default: "false"
+  scan-fail-on:
+    description: Lowest scan severity that fails the job (high, medium, low or never).
+    default: "high"
+  run-tests:
+    description: Run the tests bundled with each skill ("true" or "false").
+    default: "true"
+  python-version:
+    description: Python version to use.
+    default: "3.12"
+  version:
+    description: PyPI version of agentskill-kit to install. Empty installs the version bundled with this action.
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install agentskill-kit
+      shell: bash
+      env:
+        ASKIT_VERSION: ${{ inputs.version }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        python -m pip install --upgrade pip
+        if [ -n "$ASKIT_VERSION" ]; then
+          python -m pip install "agentskill-kit==$ASKIT_VERSION"
+        else
+          python -m pip install "$ACTION_PATH"
+        fi
+
+    - name: Lint skills
+      shell: bash
+      env:
+        SKILL_PATH: ${{ inputs.path }}
+        STRICT: ${{ inputs.strict }}
+      run: |
+        flags=""
+        if [ "$STRICT" = "true" ]; then flags="--strict"; fi
+        askit lint "$SKILL_PATH" $flags
+        askit lint "$SKILL_PATH" --format github $flags || true
+
+    - name: Scan skills
+      shell: bash
+      env:
+        SKILL_PATH: ${{ inputs.path }}
+        FAIL_ON: ${{ inputs.scan-fail-on }}
+      run: askit scan "$SKILL_PATH" --fail-on "$FAIL_ON"
+
+    - name: Test skills
+      if: ${{ inputs.run-tests == 'true' }}
+      shell: bash
+      env:
+        SKILL_PATH: ${{ inputs.path }}
+      run: askit test "$SKILL_PATH"

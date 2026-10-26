@@ -1,0 +1,21 @@
+{
+  "entry": "scripts/profile_csv.py",
+  "cases": [
+    {"name": "infers types and counts missing values", "kind": "happy", "args": ["people.csv"],
+     "files": {"people.csv": "id,name,age,joined\n1,Ann,30,2024-01-05\n2,Bob,,2024-02-10\n3,Cy,41,2024-03-01\n"},
+     "stdout_json": {"rows": 3, "columns": 4, "profile": [
+       {"name": "id", "type": "integer", "missing": 0, "unique": 3, "min": 1.0, "max": 3.0, "mean": 2.0},
+       {"name": "name", "type": "string", "missing": 0, "unique": 3},
+       {"name": "age", "type": "integer", "missing": 1, "unique": 2, "min": 30.0, "max": 41.0, "mean": 35.5},
+       {"name": "joined", "type": "date", "missing": 0, "unique": 3}]}},
+    {"name": "detects semicolon delimiter", "kind": "edge", "args": ["semi.csv"],
+     "files": {"semi.csv": "a;b\n1;x\n2;y\n"}, "stdout_json": {"rows": 2, "columns": 2}},
+    {"name": "empty column", "kind": "edge", "args": ["gaps.csv"],
+     "files": {"gaps.csv": "a,b\n1,\n2,NA\n"},
+     "stdout_json": {"rows": 2, "profile": [{"name": "a", "type": "integer"}, {"name": "b", "type": "empty", "missing": 2}]}},
+    {"name": "header only", "kind": "edge", "args": ["head.csv"],
+     "files": {"head.csv": "a,b,c\n"}, "stdout_json": {"rows": 0, "columns": 3}},
+    {"name": "missing file", "kind": "error", "args": ["nope.csv"], "expect_exit": 2,
+     "stderr_contains": "file not found"}
+  ]
+}

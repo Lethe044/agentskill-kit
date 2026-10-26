@@ -1,0 +1,5 @@
+[
+  {"name": "health", "method": "GET", "path": "/health", "expect_status": 200, "expect_body_contains": "ok"},
+  {"name": "list items", "method": "GET", "path": "/items", "expect_status": 200},
+  {"name": "create item", "method": "POST", "path": "/items", "json": {"name": "demo"}, "expect_status": 201}
+]

@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name": "extracts owners and keeps unknown dates unset", "prompt": "Summarize these notes: Sam will send the budget draft by Friday. Priya agreed to book the venue. We decided to go with option B for the logo. Nobody knows who should talk to legal yet.",
+     "must_include": ["Sam", "Priya", "option B"], "regex": ["not set|unassigned|no date"]},
+    {"name": "separates open questions", "prompt": "Meeting notes: We might switch to a new CI provider someday. Lena will check pricing next week. Decision: keep the current provider until Q3.",
+     "must_include": ["Lena", "Q3"], "regex": ["open question"]}
+  ]
+}

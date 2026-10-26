@@ -1,0 +1,22 @@
+{
+  "entry": "scripts/audit_env.py",
+  "cases": [
+    {"name": "reports missing, extra and empty keys", "kind": "happy", "args": [".env", ".env.example"], "expect_exit": 1,
+     "files": {".env": "DB_URL=postgres://localhost/app\nDEBUG=\nONLY_LOCAL=1\n",
+               ".env.example": "DB_URL=postgres://localhost/app\nDEBUG=false\nREDIS_URL=redis://localhost\n"},
+     "stdout_json": {"missing": ["REDIS_URL"], "extra": ["ONLY_LOCAL"], "empty": ["DEBUG"], "suspicious_example_keys": []}},
+    {"name": "matching files pass", "kind": "happy", "args": [".env", ".env.example"], "expect_exit": 0,
+     "files": {".env": "A=1\nB=two\n", ".env.example": "A=\nB=\n"},
+     "stdout_json": {"missing": [], "extra": [], "suspicious_example_keys": []}},
+    {"name": "flags a real looking secret in the template", "kind": "edge", "args": [".env", ".env.example"], "expect_exit": 1,
+     "files": {".env": "API_TOKEN=a\n", ".env.example": "API_TOKEN=Zx9fK3mQp8LrTy2VbN7cHd4s\nNAME=demo\n"},
+     "stdout_json": {"suspicious_example_keys": ["API_TOKEN"]}},
+    {"name": "placeholders are not secrets", "kind": "edge", "args": [".env", ".env.example"], "expect_exit": 0,
+     "files": {".env": "API_TOKEN=a\n", ".env.example": "API_TOKEN=your-token-goes-here-please\n"},
+     "stdout_json": {"suspicious_example_keys": []}},
+    {"name": "never prints values", "kind": "edge", "args": [".env", ".env.example"], "expect_exit": 1,
+     "files": {".env": "SECRET_KEY=Zx9fK3mQp8LrTy2VbN7cHd4s\nEXTRA=1\n", ".env.example": "SECRET_KEY=\n"},
+     "stdout_not_contains": "Zx9fK3mQp8LrTy2VbN7cHd4s"},
+    {"name": "missing file", "kind": "error", "args": ["a", "b"], "expect_exit": 2, "stderr_contains": "file not found"}
+  ]
+}

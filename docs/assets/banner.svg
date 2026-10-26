@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="agentskill-kit">
+  <rect width="1200" height="300" fill="#0f172a"/>
+  <rect x="60" y="84" width="14" height="132" fill="#38bdf8"/>
+  <text x="96" y="156" fill="#f8fafc" font-family="'Avenir Next','Segoe UI',system-ui,sans-serif" font-size="68" font-weight="700" letter-spacing="-1.5">agentskill-kit</text>
+  <text x="98" y="204" fill="#94a3b8" font-family="'Avenir Next','Segoe UI',system-ui,sans-serif" font-size="26">Lint, scan, test, share and export agent skills.</text>
+  <g font-family="Menlo,Consolas,monospace" font-size="20" fill="#7dd3fc">
+    <text x="760" y="110">askit lint skills/</text>
+    <text x="760" y="146">askit scan skills/</text>
+    <text x="760" y="182">askit test skills/</text>
+    <text x="760" y="218">askit export x --target all</text>
+  </g>
+</svg>

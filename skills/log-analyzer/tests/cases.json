@@ -1,0 +1,17 @@
+{
+  "entry": "scripts/analyze_log.py",
+  "cases": [
+    {"name": "counts levels and groups similar errors", "kind": "happy",
+     "stdin": "2024-05-01 10:00:01 INFO started\n2024-05-01 10:00:02 ERROR db timeout after 30s on host 10.0.0.5\n2024-05-01 10:00:09 ERROR db timeout after 45s on host 10.0.0.6\n2024-05-01 10:01:00 WARN slow query\n",
+     "stdout_json": {"total_lines": 4, "levels": {"INFO": 1, "ERROR": 2, "WARN": 1},
+                     "first_timestamp": "2024-05-01 10:00:01", "last_timestamp": "2024-05-01 10:01:00",
+                     "top_errors": [{"message": "db timeout after <n>s on host <n>.<n>.<n>.<n>", "count": 2}]}},
+    {"name": "maps FATAL and WARNING to canonical levels", "kind": "edge",
+     "stdin": "FATAL: out of memory\nWARNING: disk almost full\n",
+     "stdout_json": {"levels": {"CRITICAL": 1, "WARN": 1}}},
+    {"name": "empty input", "kind": "edge", "stdin": "",
+     "stdout_json": {"total_lines": 0, "levels": {}, "first_timestamp": null, "top_errors": []}},
+    {"name": "missing file", "kind": "error", "args": ["no-such.log"], "expect_exit": 2,
+     "stderr_contains": "file not found"}
+  ]
+}

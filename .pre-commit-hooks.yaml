@@ -1,0 +1,14 @@
+- id: askit-lint
+  name: askit lint
+  description: Check SKILL.md structure
+  entry: askit lint
+  language: python
+  files: (^|/)SKILL\.md$
+
+- id: askit-scan
+  name: askit scan
+  description: Scan skills for security red flags
+  entry: askit scan
+  language: python
+  files: ^skills/
+  pass_filenames: false

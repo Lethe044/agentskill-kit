@@ -1,0 +1,20 @@
+git status
+git add -A
+git commit -m "update docs"
+git push origin main
+docker build -t myapp:1 .
+docker run --rm -p 8080:80 myapp:1
+git status
+git add -A
+git commit -m "fix typo"
+git push origin main
+ls
+git status
+git add -A
+git commit -m "add tests"
+git push origin main
+pytest -q tests/
+git status
+git add -A
+git commit -m "refactor parser"
+git push origin main

@@ -1,0 +1,9 @@
+{
+  "entry": "scripts/check_api.py",
+  "cases": [
+    {"name": "missing checks file", "kind": "error", "args": ["nope.json", "--base-url", "http://127.0.0.1:1"],
+     "expect_exit": 2, "stderr_contains": "file not found"},
+    {"name": "invalid json", "kind": "error", "args": ["bad.json", "--base-url", "http://127.0.0.1:1"],
+     "files": {"bad.json": "{oops"}, "expect_exit": 3, "stderr_contains": "invalid JSON"}
+  ]
+}

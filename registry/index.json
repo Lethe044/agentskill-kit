@@ -1,0 +1,690 @@
+{
+  "base_url": "https://raw.githubusercontent.com/Lethe044/agentskill-kit/main/",
+  "count": 16,
+  "generator": "agentskill-kit 0.1.0",
+  "name": "agentskill-kit registry",
+  "schema": 1,
+  "skills": [
+    {
+      "author": "Lethe044",
+      "body": "# API endpoint tester\n\nA tiny smoke test runner with no dependencies. It sends real HTTP requests, so only point it at services\nthe user owns or has permission to test.\n\n## When to use\n\n- After a deploy, to confirm the main endpoints respond.\n- When the user suspects an endpoint changed shape or status code.\n- To turn a list of curl commands into a repeatable check.\n\n## How to run\n\n```bash\npython scripts/check_api.py checks.json --base-url https://staging.example.com\n```\n\nThe checks file is a JSON list:\n\n```json\n[\n  {\"name\": \"health\", \"method\": \"GET\", \"path\": \"/health\", \"expect_status\": 200, \"expect_body_contains\": \"ok\"},\n  {\"name\": \"create\", \"method\": \"POST\", \"path\": \"/items\", \"json\": {\"name\": \"demo\"}, \"expect_status\": 201}\n]\n```\n\nOptional fields: `headers` (object), `json` (request body), `expect_status` (default 200),\n`expect_body_contains` (string) and `timeout` (seconds, default 10).\n\n## Output\n\nJSON with `base_url`, `passed`, `failed` and `results`. Each result has `name`, `ok`, `status`,\n`elapsed_ms` and, when it failed, a `reason`. The exit code is 1 when any check fails.\n\n## After running\n\nReport failures first with the reason and status code. Mention slow endpoints (over one second). Do not retry\nfailing POST requests automatically, they may create duplicates.\n\n## Errors\n\nA missing checks file exits with code 2. Invalid JSON or a malformed check exits with code 3.\nConnection errors are reported as failed checks, not crashes.",
+      "description": "Runs a list of HTTP checks against a base URL from a JSON file and reports status codes, response time and body assertions. Use when the user asks whether an API is up, wants a smoke test after a deploy, or needs to verify that endpoints return what the docs promise.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "12c706ae50587be235364b446c6c1d964496d3d2764a56e9cdf15bb6bdb1b98c",
+          "size": 1875
+        },
+        {
+          "path": "scripts/check_api.py",
+          "sha256": "b224b35e03048e06390bdce3560424baa25cba615c41cfe332111970a43dda96",
+          "size": 2891
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "572b5c91b0ae4bfd7448180688b84ff3ea9795db133d12981c57fab321dd51b2",
+          "size": 423
+        },
+        {
+          "path": "tests/test_check_api.py",
+          "sha256": "928c19ed669cc167ef8a84174baa68e3c232e46baa847eb3f90ac4ee50dbf11c",
+          "size": 3174
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "api-endpoint-tester",
+      "path": "skills/api-endpoint-tester",
+      "safety": 97,
+      "scan": {
+        "high": 0,
+        "low": 1,
+        "medium": 0
+      },
+      "score": 0.992,
+      "tags": [
+        "api",
+        "http",
+        "testing",
+        "smoke-test"
+      ],
+      "tested": true,
+      "tests_passed": 7,
+      "tests_total": 7,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Changelog generator\n\nGroups commit subjects by type so release notes can be written in minutes.\n\n## When to use\n\n- The user is cutting a release and needs notes.\n- The user asks what changed since the last tag.\n- A pull request needs a summary of its commits.\n\n## How to run\n\nPipe `git log` with the `%h|%s` format into the script:\n\n```bash\ngit log v1.0.0..HEAD --pretty=format:\"%h|%s\" | python scripts/make_changelog.py --title \"v1.1.0\"\n```\n\nWithout a title, the heading is `Changelog`.\n\n## Output\n\nMarkdown on standard output. Sections appear in a fixed order: Breaking changes, Features, Fixes,\nPerformance, Documentation, Refactoring, Tests, Build and CI, Other. Empty sections are left out.\nA `!` after the type (`feat!:`) or a `BREAKING CHANGE` marker puts the commit under Breaking changes.\nEach line shows the scope in bold, the subject and the short hash.\n\n## After running\n\nRead the draft once, merge duplicate lines, and rewrite subjects that only make sense to the author.\nAdd a short summary paragraph on top for releases with user visible changes.\n\n## Errors\n\nEmpty input prints a heading and the line `No commits found.`. Lines without a `|` separator are ignored.",
+      "description": "Turns git log output into a grouped markdown changelog using conventional commit prefixes such as feat, fix and docs. Use when the user prepares a release, asks for release notes, or wants a summary of what changed between two tags.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "3ac1943c133f694e0cd1292dbcad597dfc9baeb531f097c715f3f3c5580ab52f",
+          "size": 1571
+        },
+        {
+          "path": "scripts/make_changelog.py",
+          "sha256": "9f9e0a1d62d29a3967a76f7e2d97f78e99ac27c31c938b27372b505217a50427",
+          "size": 2193
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "a657a52026aae37a9fc9ed1d29ebe5fc904d08bebc82ae16f661a7d46928b6c2",
+          "size": 1211
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "changelog-generator",
+      "path": "skills/changelog-generator",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "git",
+        "changelog",
+        "release",
+        "documentation"
+      ],
+      "tested": true,
+      "tests_passed": 5,
+      "tests_total": 5,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Commit message writer\n\n## When to use\n\n- The user pastes a diff, or says \"write a commit message for this\".\n- The user shows a vague message (\"fix stuff\", \"wip\") and wants it improved.\n- A change touches several areas and should be split into more than one commit.\n\n## Format\n\n```\n<type>(<optional scope>): <summary>\n\n<optional body>\n\n<optional footer>\n```\n\nTypes: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`. Add `!` after the type or a\n`BREAKING CHANGE:` footer for incompatible changes.\n\n## Rules\n\n1. The summary is at most 72 characters, in the imperative mood (\"add\", not \"added\"), with no trailing period.\n2. Say what changed and why, not how. The diff already shows how.\n3. Use the body for the reason, the trade-off or the side effects. Wrap lines at 72 characters.\n4. Reference issues in the footer, for example `Closes #42`.\n5. If the diff mixes unrelated changes, say so and propose one message per change.\n\n## Steps\n\n1. Read the diff and find the single main intent.\n2. Pick the type and a scope that matches a folder or module name used in the repo.\n3. Write the summary, then the body only if the reason is not obvious.\n4. Return the message in a code block, and mention any suggested split.\n\n## Example\n\nChange: a retry loop was added around an HTTP call and the timeout was raised from 5 to 15 seconds.\n\n```\nfix(client): retry failed requests and raise timeout\n\nThe upstream API drops about 2% of connections under load. Retry up to\nthree times with backoff and use a 15 second timeout so slow responses\nare not cut off.\n```\n\n## Errors\n\nIf there is no diff and no description, ask what changed instead of guessing.",
+      "description": "Writes clear git commit messages in the conventional commits style from a diff or a description of the change. Use when the user asks for a commit message, wants to tidy up a message before pushing, or has staged changes and no wording yet.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "de3f605c379bae47bb06b6bb936ce03ccd807dc391ad36c2462e96c9377f064c",
+          "size": 2066
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "05778e1f682b7717a3d1d35a5b935fe79ba32efbcab26238476d241a87b6df7b",
+          "size": 919
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "commit-message-writer",
+      "path": "skills/commit-message-writer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "git",
+        "commit",
+        "conventional-commits",
+        "writing"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# CSV profiler\n\nGives an agent a reliable picture of a CSV file before it writes any analysis code.\n\n## When to use\n\n- The user uploads or points to a CSV and asks \"what is in this file?\".\n- Before cleaning, joining or plotting data, to find empty columns and mixed types.\n- When a script fails on a column and the user suspects bad values.\n\n## How to run\n\n```bash\npython scripts/profile_csv.py data.csv\npython scripts/profile_csv.py data.tsv --delimiter tab\n```\n\nThe delimiter is detected automatically when it is not given. Use `--delimiter tab` for tab separated files.\n\n## Output\n\nJSON with `rows`, `columns` and a `profile` list. Each column has `name`, `type`\n(`integer`, `float`, `boolean`, `date`, `string` or `empty`), `missing`, `unique`, `sample`\nand, for numeric columns, `min`, `max` and `mean`.\n\n## Reading the result\n\n- A column with a large `missing` count needs a decision: drop it, fill it, or ask the user.\n- A `string` column whose `unique` count is close to `rows` is probably an identifier.\n- A `string` column with few unique values is a good candidate for a categorical type.\n- Report surprises first: mixed types, empty columns, duplicated headers.\n\n## Errors\n\nA missing file exits with code 2. A file with no rows returns `rows: 0`.",
+      "description": "Profiles a CSV file column by column, reporting inferred type, missing values, unique counts and min, max and mean for numeric columns. Use when the user hands over a CSV and asks what is in it, whether the data is clean, or what to check before analysis.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "deec5ae68040de087bcb94f77ae5df4e0824f6435f838912e8074a8c678cf01d",
+          "size": 1656
+        },
+        {
+          "path": "scripts/profile_csv.py",
+          "sha256": "0b0c1f12a2d76734e4898eccb84207eb051da89972d99d737b648ad1c6818b40",
+          "size": 2772
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "c3957d056856b6012c5d40b1bfc842bac752ffb32c6c98c4d3ee65f66924301b",
+          "size": 1375
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "csv-profiler",
+      "path": "skills/csv-profiler",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "csv",
+        "data",
+        "profiling",
+        "analysis"
+      ],
+      "tested": true,
+      "tests_passed": 5,
+      "tests_total": 5,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Dockerfile linter\n\nA small rule set that catches the problems seen most often in real Dockerfiles, with line numbers.\n\n## When to use\n\n- The user asks for a review of a Dockerfile, or says an image is too big or insecure.\n- Before a pull request that adds or changes a Dockerfile.\n- When hardening a container that runs in production.\n\n## How to run\n\n```bash\npython scripts/lint_dockerfile.py Dockerfile\n```\n\n## Rules\n\n| Rule | Meaning |\n| --- | --- |\n| `DF001` | base image uses `latest` or has no tag, so builds are not reproducible |\n| `DF002` | no `USER` instruction, the container runs as root |\n| `DF003` | `ADD` used where `COPY` is enough (ADD is only needed for archives and URLs) |\n| `DF004` | `apt-get install` without `--no-install-recommends` |\n| `DF005` | `apt-get update` without removing `/var/lib/apt/lists` in the same layer |\n| `DF006` | a secret-looking name (password, token, secret, api key) is set with `ENV` or `ARG` |\n| `DF007` | `sudo` is used inside the image |\n| `DF008` | no `HEALTHCHECK` (informational) |\n\n## Output\n\nJSON with `instructions` (count) and `findings`, a list of `{\"line\", \"rule\", \"severity\", \"message\"}`.\nSeverity is `warning` or `info`. The exit code is 1 when there is at least one warning.\n\n## After running\n\nFix `DF006` first, a secret baked into an image layer is exposed to anyone who can pull the image. Then `DF002`\nand `DF001`. Suggest multi-stage builds when the image installs compilers.\n\n## Errors\n\nA missing file exits with code 2.",
+      "description": "Checks a Dockerfile for common problems such as unpinned base images, running as root, ADD instead of COPY, secrets in ENV or ARG and apt-get without cleanup. Use when the user asks to review, harden or slim down a Dockerfile.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "af1ef3564515b4ae9da126534830289059be88e2b8bf637097a61d55b403c21a",
+          "size": 1868
+        },
+        {
+          "path": "scripts/lint_dockerfile.py",
+          "sha256": "032f359e06d0aa2ff32a3fe42020193654efc47acf8eeed92d36d8c98f16b4cb",
+          "size": 3866
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "418e667d75fd2f1508072f8d3817959ca1ef77432f5d50bbb508d7ff6a9c3fc9",
+          "size": 1541
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "dockerfile-linter",
+      "path": "skills/dockerfile-linter",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "docker",
+        "devops",
+        "security",
+        "linting"
+      ],
+      "tested": true,
+      "tests_passed": 5,
+      "tests_total": 5,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Env file auditor\n\nKeeps `.env` and `.env.example` in step and stops secrets from leaking into the example file.\n\n## When to use\n\n- An app crashes with \"missing environment variable\" and the user is not sure which one.\n- Before committing, to make sure `.env.example` has no real credentials.\n- After adding configuration, to check that the template documents every key.\n\n## How to run\n\n```bash\npython scripts/audit_env.py .env .env.example\n```\n\nThe first argument is the real file, the second is the template.\n\n## Output\n\nJSON with:\n\n- `missing`: keys in the template that the real file does not define.\n- `extra`: keys in the real file that the template does not document.\n- `empty`: keys that are defined but have no value in the real file.\n- `suspicious_example_keys`: keys in the template whose value looks like a real secret (long, mixed characters, on a name that contains KEY, SECRET, TOKEN or PASSWORD).\n\nThe exit code is 1 when anything is reported. Values are never printed, only key names.\n\n## After running\n\nFix `suspicious_example_keys` first: replace the value with a placeholder such as `changeme`, and rotate the\nsecret if the file was ever committed. Then add `extra` keys to the template and ask the user for `missing` values.\n\n## Errors\n\nA missing file exits with code 2.",
+      "description": "Compares a .env file with its .env.example template and reports missing keys, undocumented extra keys, empty values and example files that contain real looking secrets. Use when the user asks why an app fails on startup with missing configuration, or wants to check environment files before committing.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "4d4c9e3b591127e2d608adc55f16cd3d2ba9c708b485c2298c2541ba5c059413",
+          "size": 1747
+        },
+        {
+          "path": "scripts/audit_env.py",
+          "sha256": "3aa791aa3fa90b0d54f4b04bfbd7604f7f008704f7a93cae5ddd747f6b5de854",
+          "size": 2101
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "7bda968b5ab38bdb930904c0d8e8392359a8e6db426cd10c89fe5a476a7fc753",
+          "size": 1709
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "env-file-auditor",
+      "path": "skills/env-file-auditor",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "env",
+        "configuration",
+        "security",
+        "devops"
+      ],
+      "tested": true,
+      "tests_passed": 6,
+      "tests_total": 6,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# JSON diff\n\nA structural comparison that ignores key order and formatting, which a plain text diff cannot do.\n\n## When to use\n\n- Two API responses should be the same but a test fails.\n- A config or lock file changed and the user wants to know exactly which values moved.\n- Comparing a fixture with the output of the code that is supposed to produce it.\n\n## How to run\n\n```bash\npython scripts/json_diff.py old.json new.json\n```\n\n## Output\n\nJSON with `identical` (boolean), `count` and `changes`. Every change has a `path`\n(for example `users[1].email`), a `change` of `added`, `removed` or `changed`, and the `old` and `new` values\nwhere they apply. The exit code is 1 when the files differ, 0 when they match.\n\n## Reading the result\n\n1. If `identical` is true, say so and stop.\n2. Group the changes by the first path segment so the user sees which area moved.\n3. Call out type changes (for example a number that became a string), they cause the subtle bugs.\n4. Arrays are compared by position. If order is not meaningful, tell the user the diff may be noisy.\n\n## Errors\n\nA missing file exits with code 2. Invalid JSON exits with code 3 and names the file.",
+      "description": "Compares two JSON files structurally and lists added, removed and changed values with their full paths. Use when the user asks what changed between two API responses, config files, fixtures or package manifests.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "f8266ad1497f3734f8ba91a01a0c221ce7be7e5871393e693018fb85ae14ec65",
+          "size": 1500
+        },
+        {
+          "path": "scripts/json_diff.py",
+          "sha256": "f55a5249477fb5e2f1e9cc5eeaad071e7ae754fe74bcc31fe8ad4ca75553aeeb",
+          "size": 1953
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "ecc0cafe0b4871d363174d9ffabb9d22454376e03f2bfe50070f458d87a37812",
+          "size": 1696
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "json-diff",
+      "path": "skills/json-diff",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "json",
+        "diff",
+        "config",
+        "api"
+      ],
+      "tested": true,
+      "tests_passed": 6,
+      "tests_total": 6,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Log analyzer\n\nReads plain text logs and produces a structured summary so the agent can reason about the\nincident instead of scrolling through thousands of lines.\n\n## When to use\n\n- The user pastes a stack trace or log excerpt and asks for the root cause.\n- The user asks which errors happen most often, or when problems started.\n- A deploy or test run failed and a log file is available.\n\n## How to run\n\n```bash\npython scripts/analyze_log.py --top 5 app.log\ncat app.log | python scripts/analyze_log.py\n```\n\nThe script reads the file given as the last argument, or standard input when no file is given.\n\n## Output\n\nA JSON object:\n\n- `total_lines` and `levels`: a count per severity (`CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`).\n- `first_timestamp` and `last_timestamp`: the earliest and latest ISO style timestamps found, or `null`.\n- `top_errors`: the most frequent error messages as `{\"message\", \"count\"}`. Numbers, hex ids and quoted\n  values are replaced with placeholders so that similar errors group together.\n\n## Reading the result\n\n1. Start with `levels`. A high ratio of `ERROR` to `INFO` points to a sustained failure, not a one-off.\n2. Compare `first_timestamp` with the time the user reports the problem.\n3. Take the first entry of `top_errors` and search the original log for its raw form to get the stack trace.\n4. Report the cause, the evidence (counts and timestamps), and one concrete next step.\n\n## Example\n\nInput line: `2024-05-01 10:00:02 ERROR db timeout after 30s on host 10.0.0.5`\n\nThe message is grouped as `db timeout after <n>s on host <n>.<n>.<n>.<n>`.\n\n## Errors\n\nA missing file exits with code 2 and `file not found` on stderr. Empty input returns zero counts.",
+      "description": "Summarizes application log files by severity, time range and the most frequent error messages. Use when the user shares a log file or pasted log output and asks what went wrong, which errors repeat, or how noisy the log is.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "c09d7780ebc954c1a69fc047d28ff095b18bc32024eb97e1c22448ca9b2ef337",
+          "size": 2061
+        },
+        {
+          "path": "scripts/analyze_log.py",
+          "sha256": "69b713716883d4e7640feafacb8d1b266343cc1b5a047dd96a5f63f76ef22c73",
+          "size": 2367
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "de5af7bc92a3c677ab580df578e0f52495329e12b9cc859c07b8afeaa10410e3",
+          "size": 1141
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "log-analyzer",
+      "path": "skills/log-analyzer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "logs",
+        "debugging",
+        "devops",
+        "analysis"
+      ],
+      "tested": true,
+      "tests_passed": 4,
+      "tests_total": 4,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Meeting notes to actions\n\n## When to use\n\n- The user pastes notes or a transcript and asks for a summary.\n- The user needs a follow-up email or chat message after a meeting.\n- Action items are buried in a long discussion.\n\n## Output format\n\n```markdown\n## Summary\nTwo to three sentences on the purpose and the outcome.\n\n## Decisions\n- What was decided, and by whom if it is stated.\n\n## Action items\n| Owner | Task | Due |\n| --- | --- | --- |\n| Name | A verb-first task that can be checked | Date or \"not set\" |\n\n## Open questions\n- Things that were raised and not resolved.\n```\n\n## Rules\n\n1. Only list an action item when someone committed to it or was asked to do it. Ideas that nobody took are open questions.\n2. Never invent an owner or a date. Write `unassigned` or `not set` instead.\n3. Start every task with a verb and keep it specific enough to tell when it is done.\n4. Keep names exactly as written in the notes.\n5. Keep the summary neutral. Do not add opinions or judge what people said.\n\n## Steps\n\n1. Read all of the notes before writing anything.\n2. Pull out decisions first, then commitments, then unresolved points.\n3. Fill the format above and remove empty sections.\n4. If asked for a follow-up message, write a short one that repeats the action table and nothing else.\n\n## Errors\n\nIf the notes are too short to contain decisions or tasks, say so and return only the summary.",
+      "description": "Converts raw meeting notes or a transcript into decisions, action items with owners and due dates, and open questions. Use when the user pastes meeting notes, asks for a summary of a call, or wants a follow-up message for attendees.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "39f62fead6e8b5d0f5bce72e4cf0218f2992edc913dbae797d4e42a8c6fa5541",
+          "size": 1788
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "6ccf963e6da0f67a48973323fd5c5bde1a7e3bf444528ca18fdd6ba221d20e0a",
+          "size": 635
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "meeting-notes-to-actions",
+      "path": "skills/meeting-notes-to-actions",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "meetings",
+        "summary",
+        "productivity",
+        "writing"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Pull request description writer\n\n## When to use\n\n- The user is about to open a pull request and has a diff or a commit list.\n- A pull request description is empty or says only \"see commits\".\n- The change is large and reviewers need a reading order.\n\n## Template\n\n```markdown\n## Summary\nOne or two sentences: what changes and why it matters.\n\n## Motivation\nThe problem or ticket behind this change. Link the issue.\n\n## Changes\n- Grouped by area, one line each. Mention renamed or moved files once.\n\n## How it was tested\n- Commands run, cases covered, and what was not covered.\n\n## Risks and rollout\n- Migrations, config changes, performance effects, how to roll back.\n\n## Review notes\n- Where to start reading and what deserves the most attention.\n```\n\n## Rules\n\n1. Lead with the user visible effect, not the file list.\n2. Be honest about gaps. \"Not tested on Windows\" helps the reviewer more than silence.\n3. Call out anything that needs action at deploy time (new environment variable, migration, feature flag).\n4. Keep it under about 300 words unless the change is very large.\n5. Do not invent test results. If the user did not say what was tested, ask or write \"Not yet tested\".\n\n## Steps\n\n1. Read the diff and the commit messages and find the main purpose.\n2. Group the changes by area (API, UI, tests, build) instead of by file.\n3. Fill the template and drop sections that have nothing to say.\n4. Suggest a title in the form `<type>: <summary>`.\n\n## Errors\n\nIf the diff is empty or only whitespace, say that there is nothing to describe.",
+      "description": "Drafts a pull request description with a summary, motivation, a change list, test notes and risks from a diff or commit list. Use when the user opens a pull request, asks for a PR description, or wants reviewers to understand a change quickly.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d1e0002bf724dfe858f9986d9b9f490b57031f3500dbaaf41bda37bacb131b3e",
+          "size": 1948
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "pr-description-writer",
+      "path": "skills/pr-description-writer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "git",
+        "pull-request",
+        "code-review",
+        "writing"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Python code smells\n\nA fast, dependency-free first pass over Python files. It does not replace a linter, it gives an\nagent concrete line numbers to start a review from.\n\n## When to use\n\n- The user asks to review, clean up or \"look over\" Python code.\n- Before a commit or pull request, to catch the obvious problems.\n- When a project has no linter configured yet.\n\n## How to run\n\n```bash\npython scripts/smells.py src/\npython scripts/smells.py app.py utils.py --max-lines 40\n```\n\nDirectories are searched recursively for `.py` files. Hidden folders and `__pycache__` are skipped.\n\n## Rules\n\n| Rule | Meaning |\n| --- | --- |\n| `bare-except` | `except:` without an exception type hides real errors |\n| `mutable-default` | a list, dict or set used as a default argument value is shared between calls |\n| `missing-docstring` | a public function or class (no leading underscore) has no docstring |\n| `long-function` | a function is longer than `--max-lines` (default 50) |\n| `too-many-args` | a function takes more than `--max-args` parameters (default 6) |\n| `syntax-error` | the file could not be parsed |\n\n## Output\n\nJSON with `files` (number of files checked) and `findings`, a list of\n`{\"file\", \"line\", \"rule\", \"message\"}`. The exit code is 1 when there are findings and 0 otherwise.\n\n## After running\n\nGroup the findings by rule, fix the bugs first (`bare-except`, `mutable-default`), then the readability\nitems. Do not add docstrings that only repeat the function name.\n\n## Errors\n\nA path that does not exist exits with code 2.",
+      "description": "Finds common Python code smells with the ast module, such as bare except clauses, mutable default arguments, missing docstrings, very long functions and long argument lists. Use when the user asks for a quick review of Python code, a cleanup pass or a pre-commit style check.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a508ceadf6e5fc518d4495caf17c847c4914efd3f0c02c65c92898b56287e0cc",
+          "size": 1967
+        },
+        {
+          "path": "scripts/smells.py",
+          "sha256": "2f6abe88e2928c8653d238a2e86a8d1730b601152a259abdfc120636186e1ca0",
+          "size": 3448
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "cf7f3afc9043eee3d46b58cc7212bc89cb6106388ad3f6be58caf61d54bdf1e5",
+          "size": 1158
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "python-code-smells",
+      "path": "skills/python-code-smells",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "python",
+        "code-review",
+        "quality",
+        "static-analysis"
+      ],
+      "tested": true,
+      "tests_passed": 5,
+      "tests_total": 5,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# README doctor\n\nMost visitors decide in under a minute. The README has to answer three questions fast: what is this, does it\nsolve my problem, and how do I try it.\n\n## When to use\n\n- The user shares a README and asks for feedback.\n- A project is about to be announced on a forum or social media.\n- The repository has traffic but few stars or issues.\n\n## Review order\n\n1. **Opening line.** One sentence naming the problem and the audience. Reject slogans and buzzwords.\n2. **Proof above the fold.** A terminal recording, screenshot or short output sample within the first screen.\n3. **Install.** One command that works on a clean machine. State supported platforms and versions.\n4. **First success.** A minimal example whose output is shown, so the reader sees the result without running it.\n5. **Why this exists.** Two or three sentences on how it differs from the alternatives, with honest limits.\n6. **Features.** A short list of things the tool does, written as capabilities, not adjectives.\n7. **Reference.** Commands, options and configuration in tables or short sections.\n8. **Project health.** Badges for CI and version, license, contributing guide, roadmap, how to report bugs.\n\n## Rules\n\n- Check every command and link before recommending them. Do not suggest claims that cannot be shown.\n- Cut anything that sounds like marketing and does not carry information.\n- Prefer showing a real output to describing it.\n- Suggest a repository description and topics that match what people search for.\n\n## Output\n\nReturn a prioritized list: the three changes with the most impact first, each with a before and after snippet.\nEnd with a short checklist of what is still missing.\n\n## Errors\n\nIf the README is empty, ask what the project does and who it is for, then draft only the opening line and the\ninstall section.",
+      "description": "Reviews a README for the things that make people try a project, covering the opening line, install steps, a runnable example, proof that it works and contribution info, then proposes concrete edits. Use when the user asks to improve a README, wants more stars or users for an open source project, or is preparing a launch.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "604774449e79e52a9632cd038e8bd54bcbef014b7ee2420e6d108636939394dc",
+          "size": 2295
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "readme-doctor",
+      "path": "skills/readme-doctor",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "readme",
+        "documentation",
+        "open-source",
+        "growth"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Secure code review\n\n## When to use\n\n- Code parses user input, builds queries or commands, handles uploads or sessions.\n- Before a release, or when code from an unknown source is about to be merged.\n- The user asks \"is this safe?\" about a function or a service.\n\n## What to look for\n\n1. **Injection.** User input concatenated into SQL, shell commands, templates, LDAP or file paths.\n2. **Authentication and sessions.** Missing checks on endpoints, weak password storage, tokens in URLs, predictable ids.\n3. **Authorization.** Object access that trusts an id from the client without an ownership check.\n4. **Secrets.** Keys, tokens and passwords in code, config files, logs or error messages.\n5. **Unsafe deserialization.** `pickle`, `yaml.load` without a safe loader, Java object streams, `eval` on data.\n6. **Path traversal and uploads.** User controlled file names, missing type and size limits, files saved under the web root.\n7. **Cryptography.** Home made schemes, MD5 or SHA-1 for passwords, fixed IVs, `random` used for tokens.\n8. **Network.** Disabled TLS verification, permissive CORS, server side requests to user supplied URLs.\n9. **Dependencies.** Pinned versions with known advisories, install scripts that fetch code at run time.\n10. **Error handling.** Stack traces returned to clients, verbose logs with personal data.\n\n## Report format\n\nFor every finding give: severity (critical, high, medium, low), the file and line, one sentence on how it can be\nabused, and a corrected snippet. Order by severity. Finish with what was not reviewed.\n\n## Rules\n\n- Only report issues you can point to in the code. Mark guesses as \"possible\" and say what would confirm them.\n- Do not run or test against systems the user does not own.\n- Do not paste real secrets into the report. Show the first and last two characters at most.\n- Prefer the framework's built-in protection over custom code in fixes.\n\n## Errors\n\nIf only a snippet is available, state which parts of the application (auth, config, deployment) were out of view.",
+      "description": "Reviews code for common security flaws such as injection, broken authentication, unsafe deserialization, hardcoded secrets, path traversal and weak cryptography, and reports findings with severity and fixes. Use when the user asks for a security review, a pre-release audit or a check of code that handles user input, files or credentials.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "cfa59d73e080aec477f58e2f4c56e200a82d578dc72127dff0779737b409a35a",
+          "size": 2521
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "secure-code-review",
+      "path": "skills/secure-code-review",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 0.96,
+      "tags": [
+        "security",
+        "code-review",
+        "appsec",
+        "owasp"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Skill author\n\nA skill is a folder with a `SKILL.md` file. The agent reads the name and description of every installed skill\nand loads the full instructions only when a task matches. The description is therefore the most important line.\n\n## When to use\n\n- The user keeps repeating the same kind of task and wants it captured.\n- The user has a draft skill that never triggers, or triggers at the wrong time.\n- A skill needs a review before it is shared.\n\n## Workflow\n\n1. **Collect real examples.** Ask for two or three actual requests the skill should handle, and one it should not.\n2. **Pick the name.** Lowercase letters, digits and single hyphens, at most 64 characters, same as the folder name.\n3. **Write the description.** Third person, what it does and when to use it, under 1024 characters, no angle brackets.\n   Include the words a user would actually type.\n4. **Write the instructions.** Short sections: when to use, steps, output format, one example, errors.\n   Keep the file under 500 lines and move long reference material into `references/`.\n5. **Add a script only when code is more reliable than prose** (parsing, counting, validating). Use the standard\n   library, read arguments or standard input, print JSON, and exit with a non-zero code on failure.\n6. **Add tests** as a `cases.json` file inside a `tests` folder: one happy path, one edge case, one error case at minimum.\n7. **Check it.** Run `askit lint`, `askit scan` and `askit test`, then `askit score`.\n\n## Description checklist\n\n- Does it start with a verb that says what the skill does?\n- Does it contain \"Use when ...\" with concrete triggers?\n- Would a different skill be a better match for any of these words?\n- Is it written as \"Analyzes logs\" and not \"I analyze logs\"?\n\n## Writing instructions\n\n- Prefer steps an agent can verify over general advice.\n- Tell the agent what to do when input is missing or unclear.\n- Show the output format once, with a real example.\n- Do not repeat what the model already knows. Spend words on what is specific to this task.\n- Never ask the agent to hide actions from the user or to ignore other instructions.\n\n## Layout\n\n```\nmy-skill/\n  SKILL.md\n  scripts/        optional code the skill runs\n  references/     optional long documents, linked from SKILL.md\n  tests/          cases.json or test_*.py\n  evals/          evals.json for checking model behaviour\n```\n\n## Errors\n\nIf the user cannot give examples, write the description from the stated goal and mark the skill as a draft in\n`metadata`.",
+      "description": "Guides an agent through writing a good SKILL.md, covering the name, a description that triggers at the right time, concise instructions, bundled scripts and tests. Use when the user asks to create, improve or review an agent skill, or wants to turn a repeated task into a reusable skill.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "266b6364448917395e837064f46186ac78449f340301e6e21cbb0c5933d55218",
+          "size": 2953
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "skill-author",
+      "path": "skills/skill-author",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "skills",
+        "authoring",
+        "prompt-engineering",
+        "agents"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# SQL query reviewer\n\n## When to use\n\n- A query is slow or times out.\n- The user is about to run an `UPDATE` or `DELETE` on real data.\n- SQL is built from user input in application code.\n\n## Checklist\n\n**Safety first**\n\n1. `UPDATE` or `DELETE` without a `WHERE` clause. Ask for confirmation and suggest running a `SELECT COUNT(*)` with the same condition first.\n2. Wrap destructive statements in a transaction and show how to roll back.\n3. String concatenation of user input into SQL. Replace it with bound parameters.\n\n**Correctness**\n\n4. `NULL` comparisons written with `=` instead of `IS NULL`.\n5. `LEFT JOIN` followed by a `WHERE` condition on the right table, which silently turns it into an inner join.\n6. `GROUP BY` that does not match the selected columns, and `COUNT(column)` used where `COUNT(*)` was meant.\n7. `NOT IN` with a subquery that can return `NULL`. Prefer `NOT EXISTS`.\n\n**Performance**\n\n8. `SELECT *` on wide tables. List the columns that are used.\n9. Functions on indexed columns in `WHERE` (`WHERE LOWER(email) = ...`). Suggest an expression index or a different predicate.\n10. Leading wildcards (`LIKE '%term'`) that cannot use an index.\n11. Missing indexes on join and filter columns. Ask for `EXPLAIN` output instead of guessing.\n12. `OFFSET` pagination on large tables. Suggest keyset pagination.\n13. `ORDER BY` without `LIMIT` on large results, and `DISTINCT` used to hide a bad join.\n\n## Steps\n\n1. Identify the database engine. Advice differs between PostgreSQL, MySQL, SQLite and SQL Server.\n2. Go through the checklist and list only real findings, most serious first.\n3. Show the rewritten query next to each finding.\n4. If performance is the question and no `EXPLAIN` output was given, ask for it and say what to look for (sequential scans, row estimates far from actual rows).\n\n## Example\n\nInput: `DELETE FROM sessions WHERE created_at < now() - interval '30 days'`\n\nReview: valid, but deletes an unknown number of rows. Run `SELECT COUNT(*)` with the same condition first, delete\nin batches if the count is large, and keep it inside a transaction until the result looks right.\n\n## Errors\n\nIf the schema is unknown, say which assumptions the review makes about indexes and types.",
+      "description": "Reviews SQL queries for correctness, performance and safety problems such as SELECT star, missing indexes, unbounded updates, implicit casts and injection risks. Use when the user asks to optimize a query, explain why a query is slow, or check SQL before it runs on production data.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "33711a948525615c072ae9f8df7a401e0f73227cca0a37fae64fde7fa724d7f8",
+          "size": 2648
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "sql-query-reviewer",
+      "path": "skills/sql-query-reviewer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "sql",
+        "database",
+        "performance",
+        "review"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# TODO extractor\n\nTurns scattered comments into a planning list.\n\n## When to use\n\n- The user asks \"what is left to do in this repo?\".\n- Planning a cleanup sprint or a release, where known shortcuts must be reviewed.\n- Before archiving or handing over a project.\n\n## How to run\n\n```bash\npython scripts/find_todos.py src/\npython scripts/find_todos.py . --tags TODO,FIXME\n```\n\nHidden folders, `node_modules`, `venv`, `dist`, `build` and binary files are skipped.\n\n## Output\n\nJSON with `total`, `by_tag` (counts) and `items`, a list of `{\"file\", \"line\", \"tag\", \"text\"}`\nsorted by file and line. The exit code is always 0 when the path exists.\n\n## After running\n\n1. Lead with the counts per tag. `FIXME` and `HACK` usually matter more than `TODO`.\n2. Group items by file or folder and point out hot spots.\n3. Propose an order of work, and mark items that look stale (they mention past dates or removed code).\n\n## Errors\n\nA path that does not exist exits with code 2.",
+      "description": "Finds TODO, FIXME, HACK and XXX comments across a source tree and groups them by tag and file. Use when the user asks for a list of open tasks in the code, wants to plan cleanup work, or needs an inventory of technical debt.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6ed20926793b7df347f1e9391f6e15730703b21fe3b82f1ab2c818aab9db7ac3",
+          "size": 1343
+        },
+        {
+          "path": "scripts/find_todos.py",
+          "sha256": "d48ab3a9999ea455ded2351f173072cc61e5081f9fd48aee321fd4c3359c8ed6",
+          "size": 2227
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "f27462b838ddab04ac39d613e6f96cfd1fae6066cd36d579e3b51b118cc43524",
+          "size": 1418
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "todo-extractor",
+      "path": "skills/todo-extractor",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "todo",
+        "technical-debt",
+        "code-search",
+        "planning"
+      ],
+      "tested": true,
+      "tests_passed": 5,
+      "tests_total": 5,
+      "version": "1.0.0"
+    }
+  ]
+}

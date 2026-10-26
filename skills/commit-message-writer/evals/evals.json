@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"name": "uses a conventional type and imperative mood", "prompt": "Write a commit message. Change: the login form now trims whitespace from the email field before validating it, which fixes a bug where users with a trailing space could not sign in.",
+     "regex": ["^\\s*(```)?\\s*fix(\\(.+\\))?:\\s+(trim|strip|ignore|remove)"]},
+    {"name": "keeps the summary short", "prompt": "Write a commit message for adding dark mode support to the settings page, with a toggle and a saved preference.",
+     "regex": ["feat(\\(.+\\))?:\\s+[^\\n]{5,72}\\n"], "must_not_include": ["added dark mode"]},
+    {"name": "proposes a split for unrelated changes", "prompt": "Write a commit message. The diff renames a helper function in utils.py, fixes a crash in the payment webhook, and updates the README badges.",
+     "regex": ["split|separate|multiple commits|three commits|2 commits|three separate"]}
+  ]
+}

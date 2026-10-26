@@ -1,0 +1,20 @@
+{
+  "entry": "scripts/find_todos.py",
+  "cases": [
+    {"name": "finds tagged comments in several languages", "kind": "happy", "args": ["src"],
+     "files": {"src/a.py": "x = 1  # TODO: add retries\n# FIXME handle empty input\n",
+               "src/b.js": "// HACK: temporary workaround\nconst y = 2;\n"},
+     "stdout_json": {"total": 3, "by_tag": {"TODO": 1, "FIXME": 1, "HACK": 1}, "items": [
+       {"file": "src/a.py", "line": 1, "tag": "TODO", "text": "add retries"},
+       {"file": "src/a.py", "line": 2, "tag": "FIXME", "text": "handle empty input"},
+       {"file": "src/b.js", "line": 1, "tag": "HACK", "text": "temporary workaround"}]}},
+    {"name": "skips node_modules and hidden folders", "kind": "edge", "args": ["."],
+     "files": {"node_modules/lib.js": "// TODO: not mine\n", ".git/x.txt": "# TODO: hidden\n", "real.py": "# TODO: mine\n"},
+     "stdout_json": {"total": 1}},
+    {"name": "custom tag list", "kind": "edge", "args": ["src", "--tags", "NOTE"],
+     "files": {"src/a.py": "# NOTE: keep this\n# TODO: ignored\n"}, "stdout_json": {"total": 1, "by_tag": {"NOTE": 1}}},
+    {"name": "word inside a string is not a task", "kind": "edge", "args": ["src"],
+     "files": {"src/a.py": "name = 'mastodon'\nprint('todo list')\n"}, "stdout_json": {"total": 0}},
+    {"name": "missing path", "kind": "error", "args": ["missing-dir"], "expect_exit": 2, "stderr_contains": "path not found"}
+  ]
+}
