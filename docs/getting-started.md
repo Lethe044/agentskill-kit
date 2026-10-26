@@ -3,10 +3,10 @@
 ## Install
 
 ```bash
-pip install agentskill-kit
+pip install agentskill-toolkit
 ```
 
-This installs two commands that do the same thing: `askit` and `agentskill`. Python 3.9 or newer is required.
+The package is called `agentskill-toolkit` on PyPI. It installs two commands that do the same thing: `askit` and `agentskill`. Python 3.9 or newer is required.
 There are no runtime dependencies.
 
 To work from a clone instead:

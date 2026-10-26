@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentskill-kit"
+name = "agentskill-toolkit"
 version = "0.1.0"
 description = "Create, lint, security scan, test, share and export agent skills (SKILL.md) for Claude Code, Cursor, Codex, Hermes and more."
 readme = "README.md"

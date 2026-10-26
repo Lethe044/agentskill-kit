@@ -4,8 +4,8 @@
 
 <p align="center">
   <a href="https://github.com/Lethe044/agentskill-kit/actions/workflows/ci.yml"><img src="https://github.com/Lethe044/agentskill-kit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://pypi.org/project/agentskill-kit/"><img src="https://img.shields.io/pypi/v/agentskill-kit" alt="PyPI"></a>
-  <a href="https://pypi.org/project/agentskill-kit/"><img src="https://img.shields.io/pypi/pyversions/agentskill-kit" alt="Python versions"></a>
+  <a href="https://pypi.org/project/agentskill-toolkit/"><img src="https://img.shields.io/pypi/v/agentskill-toolkit" alt="PyPI"></a>
+  <a href="https://pypi.org/project/agentskill-toolkit/"><img src="https://img.shields.io/pypi/pyversions/agentskill-toolkit" alt="Python versions"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Lethe044/agentskill-kit" alt="License"></a>
 </p>
 
@@ -30,10 +30,10 @@ No runtime dependencies. No paid service required. Python 3.9 or newer on Linux,
 ## Install
 
 ```bash
-pip install agentskill-kit
+pip install agentskill-toolkit
 ```
 
-The package installs `askit` (and the longer alias `agentskill`).
+The PyPI package is named `agentskill-toolkit` (the shorter name was not available). It installs the `askit` command and the longer alias `agentskill`. The repository, the Python module (`agentskill_kit`) and the commands keep the `agentskill-kit` name.
 
 ## Quick start
 

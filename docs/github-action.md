@@ -45,7 +45,7 @@ repos:
 ## Plain CI
 
 ```yaml
-- run: pip install agentskill-kit
+- run: pip install agentskill-toolkit
 - run: askit lint skills --strict
 - run: askit scan skills --fail-on medium
 - run: askit test skills

@@ -94,6 +94,16 @@ class RepositoryHygieneTests(unittest.TestCase):
         text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
         self.assertEqual(re.search(r'^version = "([^"]+)"', text, re.M).group(1), __version__)
 
+    def test_pypi_name_is_used_consistently(self):
+        text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        name = re.search(r'^name = "([^"]+)"', text, re.M).group(1)
+        self.assertEqual(name, "agentskill-toolkit")
+        for rel in ("README.md", "docs/getting-started.md", "docs/github-action.md", "action.yml",
+                    ".github/workflows/publish.yml", "src/agentskill_kit/templates/site.html"):
+            content = (ROOT / rel).read_text(encoding="utf-8")
+            self.assertNotIn("pip install agentskill-kit", content, rel)
+            self.assertNotIn("pypi.org/project/agentskill-kit/", content, rel)
+
     def test_no_em_dashes_in_tracked_text(self):
         bad = []
         for path in ROOT.rglob("*"):

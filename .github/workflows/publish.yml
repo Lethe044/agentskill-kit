@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/agentskill-kit/
+      url: https://pypi.org/project/agentskill-toolkit/
     permissions:
       id-token: write
     steps:

@@ -23,6 +23,7 @@ as a model independent toolkit for agent skills.
 - Providers: Ollama, LM Studio, Groq, Gemini, OpenRouter, any OpenAI compatible endpoint, plus optional OpenAI and Anthropic keys.
 - Turkish and English interface (`--lang tr`).
 - 16 starter skills, a GitHub Action, a pre-commit hook and a Hermes integration.
+- The package is published on PyPI as `agentskill-toolkit`.
 
 ### Changed
 

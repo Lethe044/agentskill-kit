@@ -118,14 +118,14 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;paddin
     <div class="brand">agentskill-kit<small id="meta"></small></div>
     <nav class="links">
       <a href="https://github.com/Lethe044/agentskill-kit">GitHub</a>
-      <a href="https://pypi.org/project/agentskill-kit/">PyPI</a>
+      <a href="https://pypi.org/project/agentskill-toolkit/">PyPI</a>
       <a href="https://github.com/Lethe044/agentskill-kit/blob/main/CONTRIBUTING.md">Add a skill</a>
     </nav>
   </header>
   <section class="hero">
     <h1>Agent skills you can check before you install them</h1>
     <label class="search"><input id="q" type="search" placeholder="Search skills: logs, docker, commit, csv" autocomplete="off" aria-label="Search skills"><kbd>/</kbd></label>
-    <div class="cmdline"><code id="cmd">pip install agentskill-kit</code><button class="copy" id="copycmd" type="button">Copy</button></div>
+    <div class="cmdline"><code id="cmd">pip install agentskill-toolkit</code><button class="copy" id="copycmd" type="button">Copy</button></div>
     <div class="filters" id="filters"></div>
   </section>
   <div class="layout" id="layout">
@@ -230,7 +230,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;paddin
     }).join('');
     updateCmd(items[0]);
   }
-  function updateCmd(s){ $('cmd').textContent = s ? installCmd(s, state.target) : 'pip install agentskill-kit'; }
+  function updateCmd(s){ $('cmd').textContent = s ? installCmd(s, state.target) : 'pip install agentskill-toolkit'; }
   function renderPanel(){
     var s = skills.filter(function(x){return x.name===state.open})[0], p = $('panel');
     if(!s){ p.hidden = true; $('layout').className = 'layout'; return; }

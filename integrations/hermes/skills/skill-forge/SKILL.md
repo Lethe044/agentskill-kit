@@ -48,5 +48,5 @@ the agent's own opinion of its work.
 
 ## Errors
 
-If `askit` is not installed, install it with `pip install agentskill-kit` and continue. If the checks cannot run,
+If `askit` is not installed, install it with `pip install agentskill-toolkit` and continue. If the checks cannot run,
 say so and do not claim the skill is tested.

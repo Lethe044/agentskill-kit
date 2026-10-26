@@ -22,7 +22,7 @@ inputs:
     description: Python version to use.
     default: "3.12"
   version:
-    description: PyPI version of agentskill-kit to install. Empty installs the version bundled with this action.
+    description: PyPI version of agentskill-toolkit to install. Empty installs the version bundled with this action.
     default: ""
 
 runs:
@@ -40,7 +40,7 @@ runs:
       run: |
         python -m pip install --upgrade pip
         if [ -n "$ASKIT_VERSION" ]; then
-          python -m pip install "agentskill-kit==$ASKIT_VERSION"
+          python -m pip install "agentskill-toolkit==$ASKIT_VERSION"
         else
           python -m pip install "$ACTION_PATH"
         fi
