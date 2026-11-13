@@ -65,6 +65,14 @@ class LintResult:
                 "issues": [i.to_dict() for i in self.issues]}
 
 
+def _blank_code(text: str) -> str:
+    """Replace fenced and inline code with spaces, keeping line numbers intact."""
+    def blank(match: "re.Match[str]") -> str:
+        return re.sub(r"[^\n]", " ", match.group(0))
+    text = re.sub(r"```.*?```", blank, text, flags=re.S)
+    return re.sub(r"`[^`\n]*`", blank, text)
+
+
 def _find_line(skill: Skill, key: str) -> int:
     for idx, ln in enumerate(skill.fm_lines):
         if ln.startswith(key + ":"):
@@ -177,7 +185,7 @@ def lint_loaded(skill: Skill) -> LintResult:
         break
 
     seen = set()
-    for m in list(REF_RE.finditer(body)) + list(LINK_RE.finditer(body)):
+    for m in list(REF_RE.finditer(body)) + list(LINK_RE.finditer(_blank_code(body))):
         ref = m.group(1).strip("`.,;:")
         if ref in seen or not ref:
             continue
@@ -199,3 +207,55 @@ def format_github(result: LintResult) -> List[str]:
         path = Path(result.path) / i.file
         out.append("::%s file=%s,line=%d::[%s] %s" % (level, path.as_posix(), max(1, i.line), i.code, i.message))
     return out
+
+
+_STOP = {
+    "when", "user", "users", "asks", "asked", "uses", "using", "with", "from", "this", "that", "into", "than",
+    "their", "them", "they", "will", "also", "such", "each", "your", "what", "which", "these", "those", "about",
+    "after", "before", "over", "under", "need", "needs", "wants", "want", "whenever", "like", "have", "does",
+    "report", "reports", "reporting",
+}
+
+
+def _desc_tokens(text: str) -> set:
+    return {w for w in re.findall(r"[a-z]{4,}", text.lower()) if w not in _STOP}
+
+
+def cross_check(results: List[LintResult], threshold: float = 0.6) -> None:
+    """Flag skills in one set whose names collide or whose descriptions overlap too much.
+
+    Agents choose skills by description, so two skills that read alike compete for the same requests.
+    Issues are added to the results in place.
+    """
+    info: List[tuple] = []
+    for res in results:
+        try:
+            sk = load_skill(res.path)
+        except SkillError:
+            continue
+        info.append((res, sk.name, _desc_tokens(sk.description)))
+
+    by_name: Dict[str, List[LintResult]] = {}
+    for res, name, _ in info:
+        by_name.setdefault(name, []).append(res)
+    for name, group in by_name.items():
+        if len(group) > 1:
+            for res in group:
+                res.issues.append(Issue("W021", "warning", "another skill in this set is also named %r" % name,
+                                        hint="Skill names must be unique so an agent can tell them apart."))
+
+    for i in range(len(info)):
+        for j in range(i + 1, len(info)):
+            a, b = info[i], info[j]
+            if a[1] == b[1] or len(a[2]) < 5 or len(b[2]) < 5:
+                continue
+            union = a[2] | b[2]
+            score = len(a[2] & b[2]) / len(union)
+            if score >= threshold:
+                for mine, other in ((a, b), (b, a)):
+                    mine[0].issues.append(Issue(
+                        "W020", "warning",
+                        "description is very similar to the one of %r (%d%% overlap)" % (other[1], round(score * 100)),
+                        hint="Make each description name what is different, or merge the two skills."))
+    for res in results:
+        res.issues.sort(key=lambda i: (SEVERITY_ORDER.get(i.severity, 3), i.line, i.code))

@@ -1,0 +1,20 @@
+{
+  "entry": "scripts/review_compose.py",
+  "cases": [
+    {"name": "flags the usual problems", "kind": "happy", "args": ["docker-compose.yml"], "expect_exit": 1,
+     "files": {"docker-compose.yml": "services:\n  web:\n    image: nginx:latest\n    privileged: true\n    environment:\n      - DB_PASSWORD=hunter2\n    ports:\n      - \"8080:80\"\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n"},
+     "stdout_regex": ["DC001", "DC002", "DC003", "DC004", "DC005", "DC006", "DC007"]},
+    {"name": "careful service is clean", "kind": "happy", "args": ["compose.yaml"], "expect_exit": 0,
+     "files": {"compose.yaml": "services:\n  db:\n    image: postgres:16\n    restart: unless-stopped\n    environment:\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n    ports:\n      - \"127.0.0.1:5432:5432\"\n    healthcheck:\n      test: [\"CMD\", \"pg_isready\"]\n"},
+     "stdout_json": {"services": 1, "findings": []}},
+    {"name": "digest pinned image is accepted", "kind": "edge", "args": ["c.yml"], "expect_exit": 0,
+     "files": {"c.yml": "services:\n  app:\n    image: ghcr.io/acme/app@sha256:0123456789abcdef\n    restart: always\n    healthcheck:\n      test: [\"CMD\", \"true\"]\n"},
+     "stdout_not_contains": "DC001"},
+    {"name": "map style environment and host networking", "kind": "edge", "args": ["c.yml"], "expect_exit": 1,
+     "files": {"c.yml": "services:\n  api:\n    image: acme/api:1.2\n    network_mode: host\n    environment:\n      API_KEY: abc123\n      LOG_LEVEL: debug\n"},
+     "stdout_contains": ["DC003", "DC008"], "stdout_not_contains": "LOG_LEVEL"},
+    {"name": "empty file", "kind": "edge", "args": ["empty.yml"], "files": {"empty.yml": ""},
+     "stdout_json": {"services": 0, "findings": []}},
+    {"name": "missing file", "kind": "error", "args": ["nope.yml"], "expect_exit": 2, "stderr_contains": "file not found"}
+  ]
+}

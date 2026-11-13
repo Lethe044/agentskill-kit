@@ -1,7 +1,7 @@
 {
   "base_url": "https://raw.githubusercontent.com/Lethe044/agentskill-kit/main/",
-  "count": 16,
-  "generator": "agentskill-kit 0.1.0",
+  "count": 27,
+  "generator": "agentskill-kit 0.2.0",
   "name": "agentskill-kit registry",
   "schema": 1,
   "skills": [
@@ -145,6 +145,52 @@
     },
     {
       "author": "Lethe044",
+      "body": "# Cron explainer\n\nCron expressions are short and easy to misread. This skill translates them and checks that they are valid.\n\n## When to use\n\n- The user pastes a line from a crontab, a CI schedule or a Kubernetes CronJob.\n- A job runs at an unexpected time and the user wants to know why.\n- Before adding a schedule, to confirm that it says what the user means.\n\n## How to run\n\n```bash\npython scripts/explain_cron.py \"30 2 * * 1-5\"\npython scripts/explain_cron.py @daily\n```\n\nPass the five fields in one quoted argument (or as separate arguments). The macros `@yearly`, `@annually`,\n`@monthly`, `@weekly`, `@daily`, `@midnight` and `@hourly` are expanded first.\n\n## Field format\n\nMinute `0-59`, hour `0-23`, day of month `1-31`, month `1-12` or `jan-dec`, day of week `0-7` or `sun-sat`\n(0 and 7 are Sunday). Each field accepts `*`, a value, a range `a-b`, a step `*/n` or `a-b/n`, and comma lists.\n\n## Output\n\nJSON with `expression`, `expanded` (the five fields), `description` (English) and `warnings`.\nInvalid expressions exit with code 2 and a message on stderr.\n\n## Notes for the answer\n\n- When both day of month and day of week are restricted, classic cron runs the job when either one matches.\n  Mention this when the expression has both.\n- Cron uses the time zone of the machine or scheduler, not the user's. Ask if it matters.\n- Say what the next one or two runs would be only if the user gives the current time. This script does not guess it.\n\n## Errors\n\nA wrong number of fields, an unknown name, a value out of range or a zero step exits with code 2.",
+      "description": "Explains a five field cron expression in plain English, validates every field and warns about schedules that can never run, such as February 30. Use when the user pastes a crontab line or a schedule string and asks when it runs, or wants to check a schedule before adding it.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "dc5a925098aa162bd6120df48c91c57e45c7dd7c46ca1f4efcb4890c727598e7",
+          "size": 1984
+        },
+        {
+          "path": "scripts/explain_cron.py",
+          "sha256": "0616ed837e1db28c60595fc6c254b7f53ebebd8ec0955994ebf40158b4a979e2",
+          "size": 5460
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "2145a674ca0fece0a540947c1b02746177af4451f93441ca3be1c486314fe5a7",
+          "size": 3249
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "cron-explainer",
+      "path": "skills/cron-explainer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "cron",
+        "scheduling",
+        "devops",
+        "explain"
+      ],
+      "tested": true,
+      "tests_passed": 15,
+      "tests_total": 15,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
       "body": "# CSV profiler\n\nGives an agent a reliable picture of a CSV file before it writes any analysis code.\n\n## When to use\n\n- The user uploads or points to a CSV and asks \"what is in this file?\".\n- Before cleaning, joining or plotting data, to find empty columns and mixed types.\n- When a script fails on a column and the user suspects bad values.\n\n## How to run\n\n```bash\npython scripts/profile_csv.py data.csv\npython scripts/profile_csv.py data.tsv --delimiter tab\n```\n\nThe delimiter is detected automatically when it is not given. Use `--delimiter tab` for tab separated files.\n\n## Output\n\nJSON with `rows`, `columns` and a `profile` list. Each column has `name`, `type`\n(`integer`, `float`, `boolean`, `date`, `string` or `empty`), `missing`, `unique`, `sample`\nand, for numeric columns, `min`, `max` and `mean`.\n\n## Reading the result\n\n- A column with a large `missing` count needs a decision: drop it, fill it, or ask the user.\n- A `string` column whose `unique` count is close to `rows` is probably an identifier.\n- A `string` column with few unique values is a good candidate for a categorical type.\n- Report surprises first: mixed types, empty columns, duplicated headers.\n\n## Errors\n\nA missing file exits with code 2. A file with no rows returns `rows: 0`.",
       "description": "Profiles a CSV file column by column, reporting inferred type, missing values, unique counts and min, max and mean for numeric columns. Use when the user hands over a CSV and asks what is in it, whether the data is clean, or what to check before analysis.",
       "files": [
@@ -187,6 +233,52 @@
       "tested": true,
       "tests_passed": 5,
       "tests_total": 5,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Docker Compose reviewer\n\nA line based review of a compose file. It needs no YAML library and no Docker installation.\n\n## When to use\n\n- The user asks for a review of `docker-compose.yml` or `compose.yaml`.\n- A stack is about to move from a laptop to a server.\n- A compose file contains passwords or tokens and the user is unsure whether that is a problem.\n\n## How to run\n\n```bash\npython scripts/review_compose.py docker-compose.yml\n```\n\n## Rules\n\n| Rule | Level | Meaning |\n| --- | --- | --- |\n| `DC001` | warning | image has no tag or uses `latest` |\n| `DC002` | warning | `privileged: true` gives the container almost full host access |\n| `DC003` | warning | a secret-looking variable (password, token, secret, API key) has a literal value |\n| `DC004` | info | a port is published on all interfaces |\n| `DC005` | warning | the Docker socket is mounted, which gives the container control over the host |\n| `DC006` | info | no `restart` policy |\n| `DC007` | info | no `healthcheck` |\n| `DC008` | warning | `network_mode: host` removes network isolation |\n\n## Output\n\nJSON with `services` (count) and `findings`, a list of `{\"service\", \"line\", \"rule\", \"severity\", \"message\"}`.\nThe exit code is 1 when there is at least one warning.\n\n## After running\n\n1. Fix `DC003` first. Move secrets to an `.env` file that is not committed, or to Docker secrets, and reference them as `${NAME}`.\n2. Pin images to a version. Use a digest (`image@sha256:...`) for production.\n3. Bind local-only services to `127.0.0.1:PORT:PORT`.\n4. Treat `DC002` and `DC005` as requiring a written reason, not a quick fix.\n\n## Limits\n\nThe parser reads the common layout (services at two spaces, keys at four). Anchors, merge keys and\n`extends` are not followed.\n\n## Errors\n\nA missing file exits with code 2.",
+      "description": "Reviews a docker-compose.yml for risky or fragile settings such as unpinned images, privileged containers, secrets in environment values, a mounted Docker socket and host networking. Use when the user asks to check, harden or clean up a compose file before deploying a stack.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "8e531248c72b9cd9e474ff6dbf05328fe0c01c88b46200a4c10ea887aa280832",
+          "size": 2215
+        },
+        {
+          "path": "scripts/review_compose.py",
+          "sha256": "d64957eff768f1cc2b47277a67b615cdaba21acd19dd3d22856557a3cf23bd4c",
+          "size": 4383
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "1aed36ca8d9972aa15304aaf1eeff476f2da8db44d5e46961566d3be2a162e9e",
+          "size": 1870
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "docker-compose-reviewer",
+      "path": "skills/docker-compose-reviewer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "docker",
+        "docker-compose",
+        "devops",
+        "security"
+      ],
+      "tested": true,
+      "tests_passed": 6,
+      "tests_total": 6,
       "version": "1.0.0"
     },
     {
@@ -283,6 +375,78 @@
     },
     {
       "author": "Lethe044",
+      "body": "# Git conflict resolver\n\nA conflict means two people changed the same lines. The goal is to keep what both wanted, not to make the\nmarkers disappear.\n\n## When to use\n\n- `git merge`, `git rebase` or `git cherry-pick` stops with \"CONFLICT\".\n- A file contains `<<<<<<<`, `=======` and `>>>>>>>` markers.\n- The user is unsure whether to keep \"ours\" or \"theirs\".\n\n## Steps\n\n1. **See the scope.** Run `git status` and list the files marked as both modified. Note whether this is a merge or a\n   rebase, because \"ours\" and \"theirs\" swap meaning during a rebase.\n2. **Understand both changes.** For each file, run `git log --merge -p -- <file>` or compare the two branches, and write\n   one sentence for what each side was trying to do.\n3. **Resolve by intent.** Combine the changes when both are needed. Pick one side only when the other is obsolete,\n   and say why. Never delete a side silently.\n4. **Handle special files.**\n   - Lock files and generated files: do not edit by hand. Take one side, then regenerate with the package manager.\n   - Renames and deletes: check `git status` for \"deleted by us\" or \"deleted by them\" and decide on purpose.\n   - Whitespace-only conflicts: keep the project's formatter output.\n5. **Remove every marker.** Run `git grep -n -E '^(<<<<<<<|=======|>>>>>>>)'` and expect no output.\n6. **Verify.** Run the build and the tests. A conflict that compiles can still be wrong.\n7. **Finish.** `git add <files>`, then `git merge --continue` or `git rebase --continue`. If it went badly,\n   `git merge --abort` or `git rebase --abort` returns to the starting point.\n\n## Rules\n\n- Do not use `git checkout --theirs .` or `--ours .` on the whole tree.\n- Do not force push after a rebase on a shared branch without telling the user.\n- Show the user the resolved hunks for any file where behavior changed.\n\n## Example\n\nBoth branches edited a function. One added a timeout parameter, the other renamed a variable. The resolution keeps\nthe rename and the new parameter, and the test that covers the function is run before `git add`.\n\n## Errors\n\nIf the intent of one side is unclear, ask the user or the author of the change instead of guessing.",
+      "description": "Resolves git merge and rebase conflicts by reading both sides, keeping the intent of each change and verifying the result with tests. Use when a merge, rebase or cherry-pick stops with conflict markers, or when the user asks how to fix conflicts safely.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "69d2a4da4b391c585045007b4a4b4cf00ab8f7c9c0d68c3f7e9dc6f6aa01109c",
+          "size": 2562
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "git-conflict-resolver",
+      "path": "skills/git-conflict-resolver",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "git",
+        "merge",
+        "rebase",
+        "conflicts"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Incident postmortem writer\n\nA postmortem explains what happened and how to make it less likely, without blaming a person.\n\n## When to use\n\n- The user pastes chat logs, alerts or notes from an incident and wants a write-up.\n- A review meeting is coming and the document is not started.\n- The user asks how to structure a postmortem.\n\n## Format\n\n```markdown\n# Postmortem: <short title>\n\n**Date:** YYYY-MM-DD   **Duration:** Xh Ym   **Severity:** SEV-N   **Status:** draft\n\n## Summary\nTwo or three sentences: what broke, who was affected, how it was fixed.\n\n## Impact\nUsers or systems affected, for how long, with numbers when known (requests failed, orders lost).\n\n## Timeline (UTC)\n| Time | Event |\n| --- | --- |\n| 14:02 | Alert fired for elevated error rate |\n\n## Root cause\nThe technical cause, then the contributing factors that let it happen or delayed detection.\n\n## Detection and response\nHow it was noticed, how long it took, what slowed the response.\n\n## What went well\n## What went wrong\n## Where we got lucky\n\n## Action items\n| Action | Owner | Due | Type (prevent, detect, mitigate) |\n| --- | --- | --- | --- |\n```\n\n## Rules\n\n1. **Blameless.** Describe actions and systems, not people. Write \"the deploy script did not check the schema\", not\n   \"Sam forgot to check\".\n2. **Facts before conclusions.** Build the timeline first from the sources. Mark gaps as unknown.\n3. **Never invent.** Do not make up times, numbers, owners or causes. Write `unknown` or `to be confirmed`.\n4. **Find the system cause.** Ask \"why\" until the answer is a missing check, a gap in monitoring or a weak default,\n   not a human mistake.\n5. **Action items must be checkable.** Each has an owner and a date, and fixes one cause. Prefer few strong items over a\n   long list.\n6. **Keep secrets out.** Remove tokens, customer data and internal hostnames that do not need to be shared.\n\n## Errors\n\nIf the notes have no times, produce the format with the timeline marked \"to be filled in\" and list the questions that\nwould fill it.",
+      "description": "Turns incident notes and timelines into a blameless postmortem with impact, root cause, timeline, what went well and action items. Use when the user needs to write up an outage, a failed deploy, a data problem or a security incident.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "627651b1d7be5020c8f6818db492aa324a1adc7fbec88bcae7c2eb59eb38655c",
+          "size": 2407
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "incident-postmortem-writer",
+      "path": "skills/incident-postmortem-writer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "incident",
+        "postmortem",
+        "sre",
+        "writing"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
       "body": "# JSON diff\n\nA structural comparison that ignores key order and formatting, which a plain text diff cannot do.\n\n## When to use\n\n- Two API responses should be the same but a test fails.\n- A config or lock file changed and the user wants to know exactly which values moved.\n- Comparing a fixture with the output of the code that is supposed to produce it.\n\n## How to run\n\n```bash\npython scripts/json_diff.py old.json new.json\n```\n\n## Output\n\nJSON with `identical` (boolean), `count` and `changes`. Every change has a `path`\n(for example `users[1].email`), a `change` of `added`, `removed` or `changed`, and the `old` and `new` values\nwhere they apply. The exit code is 1 when the files differ, 0 when they match.\n\n## Reading the result\n\n1. If `identical` is true, say so and stop.\n2. Group the changes by the first path segment so the user sees which area moved.\n3. Call out type changes (for example a number that became a string), they cause the subtle bugs.\n4. Arrays are compared by position. If order is not meaningful, tell the user the diff may be noisy.\n\n## Errors\n\nA missing file exits with code 2. Invalid JSON exits with code 3 and names the file.",
       "description": "Compares two JSON files structurally and lists added, removed and changed values with their full paths. Use when the user asks what changed between two API responses, config files, fixtures or package manifests.",
       "files": [
@@ -325,6 +489,52 @@
       "tested": true,
       "tests_passed": 6,
       "tests_total": 6,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# JWT inspector\n\nReads a token the way a debugger would. It never verifies the signature and never prints it.\n\n## When to use\n\n- The user pastes a token and asks what the claims say.\n- An API answers 401 and the user suspects the token has expired or is not valid yet.\n- A review needs a quick check of algorithm, expiry and lifetime.\n\n## How to run\n\n```bash\npython scripts/inspect_jwt.py \"eyJhbGciOi...\"\necho \"$TOKEN\" | python scripts/inspect_jwt.py\npython scripts/inspect_jwt.py \"$TOKEN\" --now 1700000000\n```\n\nA leading `Bearer ` is ignored. `--now` takes epoch seconds or an ISO time ending in `Z` and makes results repeatable.\n\n## Output\n\nJSON with `header`, `payload`, `alg`, `typ`, the times `issued_at`, `not_before` and `expires_at` (UTC),\n`expired` (true, false or null when there is no expiry), `lifetime_seconds` and `warnings`.\n\nPossible warnings: the algorithm is `none`, the signature is empty, there is no `exp` claim, the lifetime is longer\nthan 24 hours, the token is expired, the token is not valid yet.\n\n## Safety\n\n- Decoding is not verification. Anyone can create a token with any claims. Never use this output to decide whether\n  to trust a token.\n- Tokens are credentials. Tell the user to treat a pasted token as exposed if it is still valid, and to rotate it.\n- Do not store tokens in files or logs while debugging.\n\n## Errors\n\nA value that is not a three part token with JSON header and payload exits with code 3.",
+      "description": "Decodes a JSON Web Token without verifying it, shows the header and claims with readable dates and flags risks such as alg none, a missing expiry, an expired token or a very long lifetime. Use when the user pastes a JWT and asks what is inside, why a token is rejected, or whether its settings look safe.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "475a3d1e3e9dd7e2a8b538df454a391cb7943cbfb2833435c9e1b79901b26a95",
+          "size": 1886
+        },
+        {
+          "path": "scripts/inspect_jwt.py",
+          "sha256": "d4682dee4fa7540a85e159ecb6612c73c0e16b7af674017ee51a31ca465aed2d",
+          "size": 3294
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "f3e8c2a85d993b18518cbc334ad7073b6a36453a29005298c65e2d358f55079a",
+          "size": 3551
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "jwt-inspector",
+      "path": "skills/jwt-inspector",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "jwt",
+        "auth",
+        "security",
+        "debugging"
+      ],
+      "tested": true,
+      "tests_passed": 10,
+      "tests_total": 10,
       "version": "1.0.0"
     },
     {
@@ -375,6 +585,52 @@
     },
     {
       "author": "Lethe044",
+      "body": "# Markdown link checker\n\nFinds links that point nowhere inside a repository. External `http` and `https` links are skipped on purpose,\nso the check is fast, repeatable and works offline.\n\n## When to use\n\n- Files or folders were renamed or moved and docs may now point to the old paths.\n- A README has a table of contents with `#anchors`.\n- Before a release, to make sure the docs have no dead internal links.\n\n## How to run\n\n```bash\npython scripts/check_links.py README.md docs/\n```\n\nDirectories are searched recursively for `.md` files. Hidden folders and `node_modules` are skipped.\n\n## What is checked\n\n- `[text](path/to/file.md)` and image links: the target must exist, relative to the file that contains the link.\n- `[text](#section)`: the heading must exist in the same file.\n- `[text](other.md#section)`: the file must exist and contain the heading.\n- Heading anchors use the GitHub style: lowercase, punctuation removed, spaces become hyphens, repeated headings\n  get `-1`, `-2` and so on.\n- Fenced code blocks and inline code are ignored.\n\n## Output\n\nJSON with `files`, `links_checked` and `broken`, a list of `{\"file\", \"line\", \"target\", \"reason\"}`.\nReasons are `file not found` and `anchor not found`. The exit code is 1 when anything is broken.\n\n## After running\n\nGroup the broken links by file, fix the target when the file moved, and remove the link when the content is gone.\nFor anchors, check whether the heading was reworded.\n\n## Errors\n\nA path that does not exist exits with code 2.",
+      "description": "Checks relative links, image paths and heading anchors in Markdown files without using the network, and lists every broken one with its line number. Use when the user asks to verify README or docs links, after moving or renaming files, or before publishing documentation.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "c2718f79195e00a8e4e638e3400294d0d64a13c13dbebcfc3ca87e1f7333997a",
+          "size": 1931
+        },
+        {
+          "path": "scripts/check_links.py",
+          "sha256": "985248fc80e73342adaca9bd6882e9f4e748130a733c0b106f4d6f352cec1b70",
+          "size": 3931
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "7dfa3c3c83aa5e83ff267e8a42e9fcdff709625199545404c0313a15871c306a",
+          "size": 1827
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "markdown-link-checker",
+      "path": "skills/markdown-link-checker",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "markdown",
+        "documentation",
+        "links",
+        "quality"
+      ],
+      "tested": true,
+      "tests_passed": 6,
+      "tests_total": 6,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
       "body": "# Meeting notes to actions\n\n## When to use\n\n- The user pastes notes or a transcript and asks for a summary.\n- The user needs a follow-up email or chat message after a meeting.\n- Action items are buried in a long discussion.\n\n## Output format\n\n```markdown\n## Summary\nTwo to three sentences on the purpose and the outcome.\n\n## Decisions\n- What was decided, and by whom if it is stated.\n\n## Action items\n| Owner | Task | Due |\n| --- | --- | --- |\n| Name | A verb-first task that can be checked | Date or \"not set\" |\n\n## Open questions\n- Things that were raised and not resolved.\n```\n\n## Rules\n\n1. Only list an action item when someone committed to it or was asked to do it. Ideas that nobody took are open questions.\n2. Never invent an owner or a date. Write `unassigned` or `not set` instead.\n3. Start every task with a verb and keep it specific enough to tell when it is done.\n4. Keep names exactly as written in the notes.\n5. Keep the summary neutral. Do not add opinions or judge what people said.\n\n## Steps\n\n1. Read all of the notes before writing anything.\n2. Pull out decisions first, then commitments, then unresolved points.\n3. Fill the format above and remove empty sections.\n4. If asked for a follow-up message, write a short one that repeats the action table and nothing else.\n\n## Errors\n\nIf the notes are too short to contain decisions or tasks, say so and return only the summary.",
       "description": "Converts raw meeting notes or a transcript into decisions, action items with owners and due dates, and open questions. Use when the user pastes meeting notes, asks for a summary of a call, or wants a follow-up message for attendees.",
       "files": [
@@ -412,6 +668,52 @@
       "tested": false,
       "tests_passed": 0,
       "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# OpenAPI summarizer\n\nTurns a large spec into a short, structured overview that an agent can reason about.\n\n## When to use\n\n- The user pastes or points to an `openapi.json` or `swagger.json`.\n- Before writing a client, to see how big the API is and how it is organized.\n- During a review, to list the operations that have no security requirement.\n\n## How to run\n\n```bash\npython scripts/summarize_openapi.py openapi.json\n```\n\nYAML specs must be converted to JSON first.\n\n## Output\n\nJSON with:\n\n- `title`, `version` (the API version) and `spec` (the OpenAPI or Swagger version).\n- `servers`: server URLs (for Swagger 2, built from `schemes`, `host` and `basePath`).\n- `operations`, `deprecated`, `unsecured`: counts. An operation is secured when it has its own `security` list,\n  or when it has none and the document defines a global `security` list. An empty list means no security.\n- `by_tag`: operations per tag (`untagged` when missing).\n- `schemas`: number of schema definitions.\n- `endpoints`: a list of `{\"method\", \"path\", \"summary\", \"tags\", \"secured\", \"deprecated\"}`.\n\n## Reading the result\n\n1. Start with the title, version and the size (operations and schemas).\n2. Name the biggest tags and what they seem to cover.\n3. Point out `unsecured` operations and ask whether they are meant to be public.\n4. Mention deprecated operations so they are not used in new code.\n\n## Errors\n\nA missing file exits with code 2. Invalid JSON, or a document that is not OpenAPI or Swagger, exits with code 3.",
+      "description": "Summarizes an OpenAPI 3 or Swagger 2 JSON file into title, servers, endpoint counts per tag, unsecured operations, deprecated operations and a compact endpoint list. Use when the user shares an API spec and asks what it contains, wants an overview before integrating, or needs to find endpoints without authentication.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b1da61ffab07be97168a59cddf60c30708cd4002eb67fbcf87b2dc75509b9841",
+          "size": 1969
+        },
+        {
+          "path": "scripts/summarize_openapi.py",
+          "sha256": "440a24aa6eb2b436e8f8e6bf3ff2aacdadd1e7ab40bbe1aab6d97225aeace102",
+          "size": 2725
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "d35597c9f49c52544a976096af3284a9c62c8563d7feac4f56130137773285b8",
+          "size": 4102
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "openapi-summarizer",
+      "path": "skills/openapi-summarizer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "openapi",
+        "swagger",
+        "api",
+        "documentation"
+      ],
+      "tested": true,
+      "tests_passed": 7,
+      "tests_total": 7,
       "version": "1.0.0"
     },
     {
@@ -530,6 +832,129 @@
       "tested": false,
       "tests_passed": 0,
       "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Regex explainer\n\nRegular expressions are dense. Read them in pieces and prove the result with examples.\n\n## When to use\n\n- The user pastes a pattern and asks what it does.\n- The user describes a format (dates, ids, log lines) and needs a pattern.\n- A pattern matches too much, too little, or is very slow.\n\n## Explaining a pattern\n\n1. Name the flavor (Python `re`, JavaScript, PCRE, POSIX). Behavior differs for lookbehind, named groups and flags.\n2. Split the pattern into tokens: anchors, groups, character classes, quantifiers, alternations.\n3. Explain each token in order, in a short list, then give the whole meaning in one sentence.\n4. Show two strings that match and two that do not, and say why.\n\n## Building a pattern\n\n1. Ask for at least three strings that must match and three that must not, unless they are given.\n2. Start from the simplest pattern that matches the positives, then tighten it with anchors (`^`, `$`, `\\b`) until the\n   negatives fail.\n3. Prefer explicit character classes (`[0-9]`, `[A-Za-z]`) over `.` and avoid `.*` in the middle of a pattern.\n4. Use non-capturing groups `(?:...)` when you do not need the text, and named groups when you do.\n5. Test the pattern against every example and show a table of results. If a code runner is available, run it.\n\n## Common problems\n\n- Greedy quantifiers swallow too much. Use a lazy quantifier (`.*?`) or a negated class (`[^\"]*`).\n- Missing anchors make a pattern match inside longer text. Add `^...$` or `\\b`.\n- Unescaped special characters (`.`, `?`, `+`, `(`) inside literal text.\n- Nested quantifiers such as `(a+)+` can take exponential time on long input. Rewrite them.\n- Do not use a regex to parse nested or recursive formats (HTML, JSON, source code). Use a parser.\n\n## Example\n\nPattern: `^(\\d{4})-(\\d{2})-(\\d{2})$`\n\nMatches a date like `2024-05-17` and captures year, month and day. It rejects `2024-5-17` (month has one digit)\nand `x2024-05-17` (anchored). It does not check that the month is 1 to 12.\n\n## Errors\n\nIf the flavor is unknown and the pattern uses flavor specific syntax, say which flavors support it.",
+      "description": "Explains regular expressions in plain language, builds new patterns from examples and tests them against matching and non-matching samples. Use when the user pastes a regex they do not understand, needs a pattern for a text format, or wants to find out why a pattern does not match.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6747cb1bbf0a04e2aa994daa1d8d81040f77710f02614cc022f5d53c9475b93f",
+          "size": 2526
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "dd2a1cd91768d0e12e917ea31bed8674abcccde702af2fcbab62ecf324f0f115",
+          "size": 399
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "regex-explainer",
+      "path": "skills/regex-explainer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "regex",
+        "text",
+        "parsing",
+        "explain"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Release checklist\n\nA release is a sequence of small checks. Do them in order and stop at the first failure.\n\n## When to use\n\n- The user says \"let's release\" or asks what is left before shipping.\n- A project has no written release process.\n- A release went wrong and the user wants a safer routine.\n\n## Before you start\n\nAsk or find out: what is being released (library, service, app), where it is published (PyPI, npm, a registry, a store,\na server), and whether versions follow semantic versioning.\n\n## Checklist\n\n1. **Branch is clean.** Releasing from the default branch, no uncommitted changes, up to date with the remote.\n2. **CI is green** on the commit to be released. Do not release on a red or unknown build.\n3. **Decide the version.** Breaking change: major. New feature: minor. Fix only: patch. For `0.x` projects, say what\n   the project treats as breaking.\n4. **Update the version** in every place it lives (package metadata, a `__version__` constant, docs, lock files).\n   Search the repository for the old number.\n5. **Update the changelog.** Group entries (added, changed, fixed, removed), mention breaking changes first, date the\n   section.\n6. **Run the full test suite** and a fresh install test: build the package, install it in a clean environment and run\n   the main command or import.\n7. **Commit and tag.** Use an annotated or signed tag that matches the version (`v1.4.0`). Push the commit, then the tag.\n8. **Publish.** Prefer automated publishing from CI with trusted credentials over publishing from a laptop.\n9. **Create the release notes** from the changelog section.\n10. **Verify after release.** Install the published version, run it, check that the docs and the package page show the\n    new version.\n11. **Announce** only after step 10 passes.\n\n## If something goes wrong\n\n- Do not delete or re-use a published version number. Publish a new patch version.\n- Yank or deprecate the bad version if the registry supports it, and say why in the notes.\n- Write down what failed and add a check to this list.\n\n## Errors\n\nIf the publish target or version rules are unknown, ask before running any command that pushes tags or uploads files.",
+      "description": "Walks through a software release step by step, from version bump and changelog to tagging, publishing and post-release checks. Use when the user is about to cut a release, asks what to verify before shipping, or wants a repeatable release process for a library or service.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "abac6063331d0261bf08e038abe0083958db22496b7a8b02dbc7d4bb3c26fefc",
+          "size": 2588
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "release-checklist",
+      "path": "skills/release-checklist",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 0.96,
+      "tags": [
+        "release",
+        "versioning",
+        "ci",
+        "process"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Requirements auditor\n\nChecks the shape of a `requirements.txt`. It does not look up vulnerabilities, so pair it with a\nvulnerability scanner when the user needs one.\n\n## When to use\n\n- The user asks whether dependencies are pinned or builds are reproducible.\n- A requirements file grew over time and may contain duplicates.\n- A project installs from a private index and the user wants to know the risks.\n\n## How to run\n\n```bash\npython scripts/audit_requirements.py requirements.txt\n```\n\n## Rules\n\n| Rule | Level | Meaning |\n| --- | --- | --- |\n| `RQ001` | warning | package has no version specifier |\n| `RQ002` | info | only a lower bound (`>=`) or a wildcard, the upper bound is open |\n| `RQ003` | warning | package is listed twice (names are compared after normalizing `-`, `_` and `.`) |\n| `RQ004` | warning | installed from a URL or VCS without a pinned commit or tag |\n| `RQ005` | warning | `--extra-index-url` lets a public package replace a private one with the same name |\n| `RQ006` | warning | `--trusted-host` disables TLS verification for a host |\n\nLines that start with `-r` or `-c`, comments, blank lines, extras (`pkg[extra]`) and environment markers\n(`; python_version < \"3.12\"`) are handled.\n\n## Output\n\nJSON with `requirements` (count) and `findings`, each `{\"line\", \"rule\", \"severity\", \"name\", \"message\"}`.\nThe exit code is 1 when there is at least one warning.\n\n## After running\n\nSuggest `pip-compile` or `uv pip compile` to produce a fully pinned lock file with hashes, keep the loose file as\nthe input, and use `--index-url` with a single trusted index when possible.\n\n## Errors\n\nA missing file exits with code 2.",
+      "description": "Audits a Python requirements.txt for unpinned packages, open version ranges, duplicate entries, installs from URLs or VCS and extra package indexes that invite dependency confusion. Use when the user asks to review dependencies, make builds reproducible or check a requirements file before release.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a875ff133b1764b3627dc37ec9ff31ee3d8cdac7646b864a2b23f5db872be9ec",
+          "size": 2094
+        },
+        {
+          "path": "scripts/audit_requirements.py",
+          "sha256": "4e44a54d6796c2a8a86e660e2bef1ae71c20e2bf00a113411c34f8c16c05dcf1",
+          "size": 3028
+        },
+        {
+          "path": "tests/cases.json",
+          "sha256": "6238543d042383c2c7edd51131a20817e207c56ad9ce409b430f42e8460187af",
+          "size": 1821
+        }
+      ],
+      "grade": "A",
+      "has_scripts": true,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "requirements-auditor",
+      "path": "skills/requirements-auditor",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "python",
+        "dependencies",
+        "pip",
+        "supply-chain"
+      ],
+      "tested": true,
+      "tests_passed": 6,
+      "tests_total": 6,
       "version": "1.0.0"
     },
     {
@@ -684,6 +1109,47 @@
       "tested": true,
       "tests_passed": 5,
       "tests_total": 5,
+      "version": "1.0.0"
+    },
+    {
+      "author": "Lethe044",
+      "body": "# Unit test writer\n\nGood tests describe behavior. They fail for one reason and say what broke.\n\n## When to use\n\n- New code has no tests.\n- A bug was fixed and needs a test that would have caught it.\n- The user asks to raise coverage on a module.\n\n## Steps\n\n1. **Find the conventions.** Look at existing tests for the framework (pytest, unittest, Jest, JUnit, Go test), file\n   layout, naming and fixtures. Follow them. Do not introduce a new framework.\n2. **Read the code under test.** List its inputs, outputs, side effects and the errors it can raise.\n3. **Plan the cases** before writing code:\n   - the normal case with realistic input,\n   - boundaries: empty, one item, maximum, zero, negative, unicode,\n   - invalid input and the exact error expected,\n   - one case per branch that has different behavior.\n4. **Write each test small.** One behavior per test, a name that states it (`test_returns_empty_list_for_empty_input`),\n   arrange, act, assert in that order.\n5. **Isolate.** Replace network, clock, randomness and the file system with fakes or temporary directories. Tests must\n   not depend on the order they run in.\n6. **Run them.** Show the command and the result. Make sure a new test fails when the behavior is broken (change the\n   code or the expectation briefly and check).\n\n## For a bug fix\n\nWrite the failing test first, from the report. Confirm that it fails for the right reason, then fix the code.\n\n## Rules\n\n- Assert on behavior, not on implementation details such as private function calls.\n- Do not copy the implementation into the test to compute the expected value. Use a literal.\n- Avoid sleeping, real network calls and shared global state.\n- Keep test data inline unless it is large.\n\n## Example\n\nFor `parse_duration(\"1h30m\")` the plan is: `\"1h30m\"` gives 5400, `\"90s\"` gives 90, `\"\"` raises `ValueError`,\n`\"1x\"` raises `ValueError`, and `\"0s\"` gives 0.\n\n## Errors\n\nIf the code cannot be tested without a refactor (for example it reads a global), say so and propose the smallest change\nthat makes it testable.",
+      "description": "Writes focused unit tests for a function or module, covering the normal case, edge cases and failures, in the test framework the project already uses. Use when the user asks for tests, wants coverage for new code, or needs a regression test that reproduces a bug.",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "edc77ccfc6064061cb5aa22ef063ef99418902bdfc9836db5983fe010d724b3a",
+          "size": 2457
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "d39f0711f95d2b122780613c24a6d2c610ceb9d3380d58bb2d995fa3da305e55",
+          "size": 824
+        }
+      ],
+      "grade": "A",
+      "has_scripts": false,
+      "license": "MIT",
+      "lint_errors": 0,
+      "lint_warnings": 0,
+      "name": "unit-test-writer",
+      "path": "skills/unit-test-writer",
+      "safety": 100,
+      "scan": {
+        "high": 0,
+        "low": 0,
+        "medium": 0
+      },
+      "score": 1.0,
+      "tags": [
+        "testing",
+        "unit-tests",
+        "pytest",
+        "quality"
+      ],
+      "tested": false,
+      "tests_passed": 0,
+      "tests_total": 0,
       "version": "1.0.0"
     }
   ]

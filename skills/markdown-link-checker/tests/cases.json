@@ -1,0 +1,23 @@
+{
+  "entry": "scripts/check_links.py",
+  "cases": [
+    {"name": "finds a missing file and a missing anchor", "kind": "happy", "args": ["."], "expect_exit": 1,
+     "files": {"README.md": "[a](docs/a.md) [b](docs/missing.md) [c](#intro) [d](#nope)\n\n# Intro\n", "docs/a.md": "# A\n"},
+     "stdout_json": {"files": 2, "links_checked": 4, "broken": [
+       {"file": "README.md", "line": 1, "target": "docs/missing.md", "reason": "file not found"},
+       {"file": "README.md", "line": 1, "target": "#nope", "reason": "anchor not found"}]}},
+    {"name": "external links and code are ignored", "kind": "happy", "args": ["README.md"], "expect_exit": 0,
+     "files": {"README.md": "[site](https://example.org/x) [mail](mailto:a@b.c)\n\n```\n[broken](nowhere.md)\n```\n\nUse `[x](y.md)` inline.\n"},
+     "stdout_json": {"files": 1, "links_checked": 0, "broken": []}},
+    {"name": "anchors in other files", "kind": "edge", "args": ["README.md"], "expect_exit": 1,
+     "files": {"README.md": "[ok](docs/a.md#section-two) [bad](docs/a.md#missing)\n", "docs/a.md": "# A\n\n## Section Two\n"},
+     "stdout_json": {"broken": [{"target": "docs/a.md#missing", "reason": "anchor not found"}]}},
+    {"name": "repeated headings get numbered anchors", "kind": "edge", "args": ["README.md"], "expect_exit": 0,
+     "files": {"README.md": "[first](#usage) [second](#usage-1)\n\n## Usage\n\n## Usage\n"},
+     "stdout_json": {"links_checked": 2, "broken": []}},
+    {"name": "images are checked too", "kind": "edge", "args": ["README.md"], "expect_exit": 1,
+     "files": {"README.md": "![logo](assets/logo.png)\n"},
+     "stdout_json": {"broken": [{"target": "assets/logo.png", "reason": "file not found"}]}},
+    {"name": "missing path", "kind": "error", "args": ["nowhere"], "expect_exit": 2, "stderr_contains": "path not found"}
+  ]
+}

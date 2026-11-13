@@ -36,6 +36,7 @@ class Rule:
     pattern: Pattern[str]
     code_only: bool = False
     accept: Optional[Callable[[str], bool]] = None
+    reject_before: Optional[Pattern[str]] = None  # skip the match when this appears earlier on the line
 
 
 def _r(pattern: str, flags: int = re.I) -> Pattern[str]:
@@ -83,8 +84,10 @@ RULES: List[Rule] = [
             r"(?:prompt|instructions?|rules|guidelines)")),
     Rule("SC003", "high", "Instruction to hide actions from the user",
          _r(r"\b(?:do\s+not|don't|never)\s+(?:tell|inform|mention|reveal|show|notify)\s+(?:this\s+)?(?:to\s+)?the\s+user\b"
-            r"|\bwithout\s+(?:telling|informing|notifying|alerting)\s+the\s+user\b"
             r"|\bhide\s+(?:this|it)\s+from\s+the\s+user\b")),
+    Rule("SC003", "high", "Instruction to hide actions from the user",
+         _r(r"\bwithout\s+(?:telling|informing|notifying|alerting)\s+the\s+user\b"),
+         reject_before=_r(r"\b(?:not|never|n't|avoid|unless|must\s+not|cannot)\b")),
     Rule("SC004", "medium", "Jailbreak style phrasing",
          _r(r"\b(?:developer\s+mode|jailbreak(?:ed)?|do\s+anything\s+now|you\s+are\s+now\s+(?:in\s+)?"
             r"(?:a\s+|an\s+)?(?:unrestricted|unfiltered|dan)\b)")),
@@ -96,10 +99,15 @@ RULES: List[Rule] = [
     Rule("SC007", "medium", "Instruction hidden inside an HTML comment",
          _r(r"<!--(?:(?!-->).){0,400}?\b(?:ignore|you\s+must|always\s+run|execute|exfiltrate|send\s+the)\b"
             r"(?:(?!-->).){0,400}?-->", re.I | re.S)),
+    Rule("SC008", "medium", "Chat template or role marker inside instructions",
+         _r(r"<\|(?:im_start|im_end|system|user|assistant|endoftext)\|>|\[/?INST\]|<</?SYS>>")),
+    Rule("SC009", "medium", "Link or image URL that can carry data out",
+         _r(r"!?\[[^\]]*\]\(\s*https?://[^)\s]*[?&][^)\s]*(?:\{[^}]*\}|\$\{?\w+|%7B)")),
     # Dangerous commands
-    Rule("SC101", "high", "Downloads and pipes straight into a shell",
-         _r(r"\b(?:curl|wget)\b[^\n|;]*\|\s*(?:sudo\s+)?(?:ba|z|da|k)?sh\b"
-            r"|\b(?:iwr|irm|invoke-webrequest|invoke-restmethod)\b[^\n|]*\|\s*(?:iex|invoke-expression)\b")),
+    Rule("SC101", "high", "Downloads and pipes straight into a shell or interpreter",
+         _r(r"\b(?:curl|wget)\b[^\n|;]*\|\s*(?:sudo\s+)?(?:(?:ba|z|da|k)?sh|python[0-9.]*|node|perl|ruby|php)\b"
+            r"|\b(?:iwr|irm|invoke-webrequest|invoke-restmethod)\b[^\n|]*\|\s*(?:iex|invoke-expression)\b"
+            r"|\beval\s+\"?\$\(\s*(?:curl|wget)\b|\b(?:source|bash|sh|zsh)\s+<\(\s*(?:curl|wget)\b")),
     Rule("SC102", "high", "Recursive delete of a broad path",
          _r(r"\brm\s+-(?:[a-z]*r[a-z]*f|[a-z]*f[a-z]*r)[a-z]*\s+(?:--no-preserve-root\s+)?"
             r"(?:/|~|\$HOME|\$\{HOME\}|\*)(?:\s|$|/)")),
@@ -121,6 +129,7 @@ RULES: List[Rule] = [
          _r(r"\bgit\s+push\s+(?:[^\n]*\s)?(?:-f|--force)\b|\bgit\s+reset\s+--hard\b")),
     Rule("SC111", "medium", "Installs a package from an arbitrary URL",
          _r(r"\bpip3?\s+install\s+(?:-[A-Za-z-]+\s+)*(?:https?://|git\+)")),
+    Rule("SC112", "low", "Long encoded blob", re.compile(r"[A-Za-z0-9+/]{400,}={0,2}")),
     # Secrets
     Rule("SC201", "high", "AWS access key", SECRET_PATTERNS[0]),
     Rule("SC202", "high", "GitHub token", _r(SECRET_PATTERNS[1].pattern + "|" + SECRET_PATTERNS[2].pattern, 0)),
@@ -232,6 +241,10 @@ def scan_text(text: str, filename: str = "SKILL.md") -> List[Finding]:
             line_text = lines[line_no - 1] if line_no - 1 < len(lines) else ""
             if _ignored(line_text, rule.id):
                 continue
+            if rule.reject_before is not None:
+                line_start = text.rfind("\n", 0, m.start()) + 1
+                if rule.reject_before.search(text[line_start:m.start()]):
+                    continue
             snippet = line_text.strip()
             if rule.id == "SC006":
                 snippet = "U+%04X" % ord(matched[0])

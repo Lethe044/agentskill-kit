@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name": "explains anchors and quantifiers", "prompt": "Explain this regex: ^(\\d{4})-(\\d{2})-(\\d{2})$",
+     "must_include": ["year", "month", "day"], "regex": ["anchor|start|begin|end"]},
+    {"name": "flags the greedy pitfall", "prompt": "My pattern \"(.*)\" matches too much when a line has two quoted strings. Why?",
+     "regex": ["greedy"], "must_include": ["[^"]}
+  ]
+}

@@ -66,7 +66,25 @@ def check_output(case: Dict[str, Any], output: str) -> str:
     return ""
 
 
-def run_evals(skill_dir: Any, llm: LLM, baseline: bool = False, limit: int = 0) -> EvalReport:
+JUDGE_PROMPT = (
+    "You grade an AI answer against criteria. Reply with PASS or FAIL on the first line, then one short reason.\n\n"
+    "Request:\n%s\n\nAnswer:\n%s\n\nCriteria:\n%s\n"
+)
+
+
+def judge_output(llm: LLM, prompt: str, output: str, criteria: Any) -> str:
+    """Ask the model to grade an answer. Returns an empty string on PASS, otherwise the reason."""
+    items = criteria if isinstance(criteria, list) else [criteria]
+    text = "\n".join("- %s" % c for c in items)
+    reply = llm.chat([{"role": "user", "content": JUDGE_PROMPT % (prompt, output[:6000], text)}],
+                     temperature=0.0, max_tokens=300).content.strip()
+    first = reply.splitlines()[0].upper() if reply else ""
+    if "PASS" in first and "FAIL" not in first:
+        return ""
+    return "judge: " + (" ".join(reply.split())[:160] or "no verdict")
+
+
+def run_evals(skill_dir: Any, llm: LLM, baseline: bool = False, limit: int = 0, judge: bool = False) -> EvalReport:
     skill = load_skill(skill_dir)
     path = skill.path / "evals" / "evals.json"
     report = EvalReport(skill=skill.name)
@@ -87,9 +105,15 @@ def run_evals(skill_dir: Any, llm: LLM, baseline: bool = False, limit: int = 0) 
         out = llm.chat([{"role": "system", "content": system}, {"role": "user", "content": prompt}],
                        temperature=0.0, max_tokens=1500).content
         reason = check_output(case, out)
+        use_judge = judge and case.get("judge")
+        if not reason and use_judge:
+            reason = judge_output(llm, prompt, out, case["judge"])
         item = EvalCase(name, not reason, reason, output=out)
         if baseline:
             base_out = llm.chat([{"role": "user", "content": prompt}], temperature=0.0, max_tokens=1500).content
-            item.baseline_passed = not check_output(case, base_out)
+            base_reason = check_output(case, base_out)
+            if not base_reason and use_judge:
+                base_reason = judge_output(llm, prompt, base_out, case["judge"])
+            item.baseline_passed = not base_reason
         report.cases.append(item)
     return report

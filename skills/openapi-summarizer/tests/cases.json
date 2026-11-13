@@ -1,0 +1,133 @@
+{
+  "entry": "scripts/summarize_openapi.py",
+  "cases": [
+    {
+      "name": "summarizes an OpenAPI 3 document",
+      "kind": "happy",
+      "args": [
+        "spec.json"
+      ],
+      "files": {
+        "spec.json": "{\"openapi\": \"3.0.3\", \"info\": {\"title\": \"Pets\", \"version\": \"2.1.0\"}, \"servers\": [{\"url\": \"https://api.example.org/v2\"}], \"security\": [{\"apiKey\": []}], \"paths\": {\"/pets\": {\"get\": {\"summary\": \"List pets\", \"tags\": [\"pets\"]}, \"post\": {\"summary\": \"Create a pet\", \"tags\": [\"pets\"]}}, \"/health\": {\"get\": {\"summary\": \"Health check\", \"security\": []}}, \"/old\": {\"get\": {\"summary\": \"Legacy\", \"tags\": [\"legacy\"], \"deprecated\": true}}}, \"components\": {\"schemas\": {\"Pet\": {}, \"Error\": {}}}}"
+      },
+      "stdout_json": {
+        "title": "Pets",
+        "version": "2.1.0",
+        "spec": "3.0.3",
+        "servers": [
+          "https://api.example.org/v2"
+        ],
+        "operations": 4,
+        "deprecated": 1,
+        "unsecured": 1,
+        "schemas": 2,
+        "by_tag": {
+          "pets": 2,
+          "untagged": 1,
+          "legacy": 1
+        }
+      }
+    },
+    {
+      "name": "operation level security overrides the global list",
+      "kind": "happy",
+      "args": [
+        "spec.json"
+      ],
+      "files": {
+        "spec.json": "{\"openapi\": \"3.0.3\", \"info\": {\"title\": \"Pets\", \"version\": \"2.1.0\"}, \"servers\": [{\"url\": \"https://api.example.org/v2\"}], \"security\": [{\"apiKey\": []}], \"paths\": {\"/pets\": {\"get\": {\"summary\": \"List pets\", \"tags\": [\"pets\"]}, \"post\": {\"summary\": \"Create a pet\", \"tags\": [\"pets\"]}}, \"/health\": {\"get\": {\"summary\": \"Health check\", \"security\": []}}, \"/old\": {\"get\": {\"summary\": \"Legacy\", \"tags\": [\"legacy\"], \"deprecated\": true}}}, \"components\": {\"schemas\": {\"Pet\": {}, \"Error\": {}}}}"
+      },
+      "stdout_json": {
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/health",
+            "secured": false
+          },
+          {
+            "method": "GET",
+            "path": "/old",
+            "secured": true,
+            "deprecated": true
+          },
+          {
+            "method": "GET",
+            "path": "/pets",
+            "secured": true
+          },
+          {
+            "method": "POST",
+            "path": "/pets",
+            "secured": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "swagger 2 documents are supported",
+      "kind": "edge",
+      "args": [
+        "old.json"
+      ],
+      "files": {
+        "old.json": "{\"swagger\": \"2.0\", \"info\": {\"title\": \"Old API\", \"version\": \"1\"}, \"host\": \"old.example.org\", \"basePath\": \"/api\", \"schemes\": [\"https\"], \"paths\": {\"/items\": {\"get\": {\"summary\": \"Items\"}}}, \"definitions\": {\"Item\": {}}}"
+      },
+      "stdout_json": {
+        "spec": "2.0",
+        "servers": [
+          "https://old.example.org/api"
+        ],
+        "operations": 1,
+        "schemas": 1,
+        "unsecured": 1
+      }
+    },
+    {
+      "name": "a spec without paths is valid",
+      "kind": "edge",
+      "args": [
+        "empty.json"
+      ],
+      "files": {
+        "empty.json": "{\"openapi\": \"3.1.0\", \"info\": {\"title\": \"Empty\", \"version\": \"0\"}}"
+      },
+      "stdout_json": {
+        "operations": 0,
+        "endpoints": []
+      }
+    },
+    {
+      "name": "not an OpenAPI document",
+      "kind": "error",
+      "args": [
+        "other.json"
+      ],
+      "expect_exit": 3,
+      "files": {
+        "other.json": "{\"hello\": \"world\"}"
+      },
+      "stderr_contains": "not an OpenAPI"
+    },
+    {
+      "name": "invalid json",
+      "kind": "error",
+      "args": [
+        "bad.json"
+      ],
+      "expect_exit": 3,
+      "files": {
+        "bad.json": "{oops"
+      },
+      "stderr_contains": "invalid JSON"
+    },
+    {
+      "name": "missing file",
+      "kind": "error",
+      "args": [
+        "nope.json"
+      ],
+      "expect_exit": 2,
+      "stderr_contains": "file not found"
+    }
+  ]
+}

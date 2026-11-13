@@ -13,7 +13,7 @@ SKILL_DIRS = discover_skills(ROOT / "skills") + discover_skills(ROOT / "integrat
 
 class StarterSkillTests(unittest.TestCase):
     def test_there_are_enough_skills(self):
-        self.assertGreaterEqual(len(discover_skills(ROOT / "skills")), 15)
+        self.assertGreaterEqual(len(discover_skills(ROOT / "skills")), 25)
 
     def test_lint_is_clean(self):
         for d in SKILL_DIRS:

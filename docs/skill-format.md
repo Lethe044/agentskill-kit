@@ -68,6 +68,7 @@ Keep SKILL.md under 500 lines. Put long reference material in `references/`.
 | W006 | warning | the instructions mention a file that does not exist |
 | W007 | warning | leftover template or placeholder text |
 | W010, W011 | warning | tabs in frontmatter, reserved word in name |
+| W020, W021 | warning | when several skills are linted together: very similar descriptions, or the same name (`--no-compare` turns it off) |
 | I001 to I003 | info | no license, legacy top-level key, unknown key |
 
 Errors fail `askit lint`. Add `--strict` to fail on warnings too.
@@ -115,6 +116,10 @@ should locate them with `__file__`.
 ```
 
 Run `askit eval path/to/skill --provider groq --baseline` to compare the answers with and without the skill.
+
+For checks that strings cannot express, add a `judge` criterion (text or a list) to a case and pass `--judge`. The model then
+grades the answer with PASS or FAIL. The string checks run first, and the judge only runs when they pass. With `--baseline`,
+the answer without the skill is judged the same way. Judge results depend on the model, so use them as a signal.
 Checks are plain strings and regular expressions, so results are repeatable.
 
 ## Quality score

@@ -1,0 +1,23 @@
+{
+  "entry": "scripts/audit_requirements.py",
+  "cases": [
+    {"name": "reports unpinned, open range and duplicates", "kind": "happy", "args": ["requirements.txt"], "expect_exit": 1,
+     "files": {"requirements.txt": "flask\nrequests>=2.0\nnumpy==1.26.4\nRequests==2.31.0\n"},
+     "stdout_json": {"requirements": 4, "findings": [
+       {"line": 1, "rule": "RQ001", "severity": "warning", "name": "flask"},
+       {"line": 2, "rule": "RQ002", "severity": "info", "name": "requests"},
+       {"line": 4, "rule": "RQ003", "severity": "warning", "name": "Requests"}]}},
+    {"name": "fully pinned file is clean", "kind": "happy", "args": ["r.txt"], "expect_exit": 0,
+     "files": {"r.txt": "# runtime\n-r base.txt\n\nflask==3.0.3  # web\nuvicorn[standard]==0.30.0 ; python_version >= \"3.9\"\nrich~=13.7\n"},
+     "stdout_json": {"requirements": 3, "findings": []}},
+    {"name": "VCS installs need a pinned ref", "kind": "edge", "args": ["r.txt"], "expect_exit": 1,
+     "files": {"r.txt": "git+https://example.org/acme/lib.git#egg=lib\ngit+https://example.org/acme/other.git@4f2a9c1d#egg=other\n"},
+     "stdout_json": {"requirements": 2, "findings": [{"line": 1, "rule": "RQ004", "severity": "warning"}]}},
+    {"name": "index options", "kind": "edge", "args": ["r.txt"], "expect_exit": 1,
+     "files": {"r.txt": "--extra-index-url https://pypi.example.org/simple\n--trusted-host pypi.example.org\nclick==8.1.7\n"},
+     "stdout_contains": ["RQ005", "RQ006"]},
+    {"name": "normalizes names when looking for duplicates", "kind": "edge", "args": ["r.txt"], "expect_exit": 1,
+     "files": {"r.txt": "typing_extensions==4.12.2\nTyping-Extensions==4.12.2\n"}, "stdout_contains": "RQ003"},
+    {"name": "missing file", "kind": "error", "args": ["nope.txt"], "expect_exit": 2, "stderr_contains": "file not found"}
+  ]
+}

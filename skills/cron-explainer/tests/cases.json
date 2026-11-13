@@ -1,0 +1,158 @@
+{
+  "entry": "scripts/explain_cron.py",
+  "cases": [
+    {
+      "name": "weekday mornings",
+      "kind": "happy",
+      "args": [
+        "30 2 * * 1-5"
+      ],
+      "stdout_json": {
+        "description": "At 02:30, on Monday through Friday",
+        "warnings": []
+      }
+    },
+    {
+      "name": "every 15 minutes",
+      "kind": "happy",
+      "args": [
+        "*/15 * * * *"
+      ],
+      "stdout_json": {
+        "description": "Every 15 minutes, every day"
+      }
+    },
+    {
+      "name": "first of the month",
+      "kind": "happy",
+      "args": [
+        "0 9 1 * *"
+      ],
+      "stdout_json": {
+        "description": "At 09:00, on day-of-month 1"
+      }
+    },
+    {
+      "name": "sunday midnight",
+      "kind": "happy",
+      "args": [
+        "0 0 * * 0"
+      ],
+      "stdout_json": {
+        "description": "At 00:00, on Sunday"
+      }
+    },
+    {
+      "name": "macro",
+      "kind": "happy",
+      "args": [
+        "@daily"
+      ],
+      "stdout_json": {
+        "description": "At 00:00, every day"
+      }
+    },
+    {
+      "name": "month range",
+      "kind": "edge",
+      "args": [
+        "0 12 * 6-8 *"
+      ],
+      "stdout_json": {
+        "description": "At 12:00, in June through August"
+      }
+    },
+    {
+      "name": "named days in a list",
+      "kind": "edge",
+      "args": [
+        "5 4 * * mon,wed,fri"
+      ],
+      "stdout_json": {
+        "description": "At 04:05, on Monday, Wednesday and Friday"
+      }
+    },
+    {
+      "name": "step in the hour field",
+      "kind": "edge",
+      "args": [
+        "0 */2 * * *"
+      ],
+      "stdout_json": {
+        "description": "At minute 0, every 2 hours, every day"
+      }
+    },
+    {
+      "name": "seven means sunday",
+      "kind": "edge",
+      "args": [
+        "0 8 * * 7"
+      ],
+      "stdout_json": {
+        "description": "At 08:00, on Sunday"
+      }
+    },
+    {
+      "name": "impossible date",
+      "kind": "edge",
+      "args": [
+        "0 0 31 2 *"
+      ],
+      "stdout_json": {
+        "description": "At 00:00, on day-of-month 31, in February",
+        "warnings": [
+          "this schedule never runs: February has no day 31"
+        ]
+      }
+    },
+    {
+      "name": "both day fields set",
+      "kind": "edge",
+      "args": [
+        "0 0 1 * mon"
+      ],
+      "stdout_json": {
+        "description": "At 00:00, on day-of-month 1, on Monday",
+        "warnings": [
+          "day-of-month and day-of-week are both set: classic cron runs on either match"
+        ]
+      }
+    },
+    {
+      "name": "value out of range",
+      "kind": "error",
+      "args": [
+        "61 * * * *"
+      ],
+      "expect_exit": 2,
+      "stderr_contains": "out of range"
+    },
+    {
+      "name": "too few fields",
+      "kind": "error",
+      "args": [
+        "* * * *"
+      ],
+      "expect_exit": 2,
+      "stderr_contains": "needs 5 fields"
+    },
+    {
+      "name": "zero step",
+      "kind": "error",
+      "args": [
+        "*/0 * * * *"
+      ],
+      "expect_exit": 2,
+      "stderr_contains": "invalid step"
+    },
+    {
+      "name": "unknown macro",
+      "kind": "error",
+      "args": [
+        "@sometimes"
+      ],
+      "expect_exit": 2,
+      "stderr_contains": "unknown macro"
+    }
+  ]
+}

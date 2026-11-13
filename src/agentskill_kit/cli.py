@@ -100,8 +100,11 @@ def cmd_init(args) -> int:
 
 def cmd_lint(args) -> int:
     from .lint import format_github, lint_skill
+    from .lint import cross_check
     skills = _collect(args.paths)
     results = [lint_skill(p) for p in skills]
+    if not args.no_compare and len(results) > 1:
+        cross_check(results)
     if args.format == "json":
         _emit_json([r.to_dict() for r in results])
     elif args.format == "github":
@@ -252,7 +255,7 @@ def cmd_eval(args) -> int:
     llm = _llm(args)
     rc = 0
     for p in skills:
-        rep = run_evals(p, llm, args.baseline, args.limit)
+        rep = run_evals(p, llm, args.baseline, args.limit, args.judge)
         if not rep.has_evals:
             print("%s  %s" % (_rel(p), ui.paint("no evals/evals.json", "gray")))
             continue
@@ -465,6 +468,62 @@ def cmd_list(args) -> int:
     return 0
 
 
+def cmd_audit(args) -> int:
+    from .audit import default_locations, run_audit
+    if args.path:
+        locations = [("path", Path(p)) for p in args.path]
+        for _, p in locations:
+            if not p.exists():
+                raise CliError("not found: %s" % p)
+    else:
+        locations = default_locations()
+    if not locations:
+        raise CliError("no installed skills found. Looked in .claude/skills, .hermes/skills and your home "
+                       "directory. Use --path to point at another folder.")
+    report = run_audit(locations)
+    failing = report.failing(args.fail_on)
+    if args.format == "json":
+        _emit_json(report.to_dict())
+        return 1 if failing else 0
+    print(ui.heading(t("audit_title")))
+    for loc in report.scanned_locations:
+        print(ui.info(loc))
+    if not report.entries:
+        print(t("no_skills", path=", ".join(report.scanned_locations)))
+        return 0
+    rows = []
+    for e in report.entries:
+        tone = {"clean": "green", "review": "yellow", "risky": "red"}[e.scan.verdict]
+        rows.append((e.lint.skill, e.location, "%d/%d" % (len(e.lint.errors), len(e.lint.warnings)),
+                     ui.paint(e.scan.verdict, tone), str(e.scan.safety)))
+    print(ui.table(rows, ["skill", "location", "lint e/w", "scan", "safety"]))
+    shown = [e for e in report.entries if any(f.severity != "low" for f in e.scan.findings)]
+    for e in shown:
+        print("\n%s  %s" % (ui.paint(e.lint.skill, "bold"), _rel(e.path)))
+        for f in e.scan.findings:
+            if f.severity == "low":
+                continue
+            loc = ":%d" % f.line if f.line else ""
+            print("  %s %s %s%s  %s" % (f.severity.ljust(6), f.rule, f.file, loc, f.message))
+    print("\n" + t("audit_summary", n=len(report.entries), r=sum(1 for e in report.entries if e.scan.verdict == "risky"),
+                  v=sum(1 for e in report.entries if e.scan.verdict == "review")))
+    return 1 if failing else 0
+
+
+def cmd_update(args) -> int:
+    from .install import InstallError, update
+    try:
+        rows = update(args.name, args.registry, args.dry_run)
+    except InstallError as exc:
+        raise CliError(str(exc))
+    if not rows:
+        print("nothing installed through askit yet")
+        return 0
+    table = [(r["name"], r["target"], r["old_version"] or "-", r["new_version"] or "-", r["status"]) for r in rows]
+    print(ui.table(table, ["name", "target", "installed", "registry", "status"]))
+    return 1 if any(r["status"].startswith(("failed", "error")) for r in rows) else 0
+
+
 def cmd_registry(args) -> int:
     from . import registry
     from .site import write_site
@@ -627,6 +686,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("lint", cmd_lint, "check SKILL.md structure (offline, no model)")
     sp.add_argument("paths", nargs="*")
     sp.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    sp.add_argument("--no-compare", action="store_true", help="skip the check for look-alike skills")
     sp.add_argument("--format", choices=["text", "json", "github"], default="text")
 
     sp = add("scan", cmd_scan, "scan skills for security red flags")
@@ -662,6 +722,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("eval", cmd_eval, "check how well a model follows a skill (evals/evals.json)")
     sp.add_argument("path")
     sp.add_argument("--baseline", action="store_true", help="also run without the skill for comparison")
+    sp.add_argument("--judge", action="store_true", help="grade cases that have a judge criterion with the model")
     sp.add_argument("--limit", type=int, default=0)
     _add_llm_args(sp)
 
@@ -724,6 +785,16 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("list", cmd_list, "list local skills or what askit installed")
     sp.add_argument("paths", nargs="*")
     sp.add_argument("--installed", action="store_true")
+
+    sp = add("audit", cmd_audit, "scan the skills already installed on this machine")
+    sp.add_argument("--path", action="append", help="folder to audit (repeatable). Default: agent skill folders")
+    sp.add_argument("--fail-on", choices=["high", "medium", "low", "never"], default="high")
+    sp.add_argument("--format", choices=["text", "json"], default="text")
+
+    sp = add("update", cmd_update, "update skills installed from a registry")
+    sp.add_argument("name", nargs="?")
+    sp.add_argument("--registry", help="use this registry index instead of the recorded one")
+    sp.add_argument("--dry-run", action="store_true")
 
     sp = add("registry", cmd_registry, "build a registry index or a static website")
     rsub = sp.add_subparsers(dest="reg_cmd", metavar="build|site", required=True)

@@ -12,6 +12,9 @@
 | `copilot` | `.github/instructions/<name>.instructions.md` | no |
 | `codex` | a managed block in `AGENTS.md` | `~/.codex/AGENTS.md` |
 | `gemini` | a managed block in `GEMINI.md` | `~/.gemini/GEMINI.md` |
+| `aider` | a managed block in `CONVENTIONS.md` (load it with `aider --read CONVENTIONS.md`) | no |
+| `cline` | `.clinerules/<name>.md` | no |
+| `roo` | `.roo/rules/<name>.md` | no |
 | `all` | every target above that supports the chosen scope | |
 
 ## How conversion works

@@ -34,6 +34,17 @@ def _safe_rel(rel: str) -> bool:
     return bool(rel) and not p.is_absolute() and ".." not in p.parts and not re.match(r"^[A-Za-z]:", rel)
 
 
+def files_digest(files: List[Tuple[str, str]]) -> str:
+    """One checksum for a set of (path, sha256) pairs."""
+    text = "\n".join("%s:%s" % (path, sha) for path, sha in sorted(files))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def dir_digest(path: Path) -> str:
+    from .skillfile import iter_skill_files
+    return files_digest([(f.as_posix(), registry.sha256_file(path / f)) for f in iter_skill_files(path)])
+
+
 def load_ledger() -> Dict[str, Any]:
     p = ledger_path()
     if not p.exists():
@@ -190,7 +201,8 @@ def install(source: str, target: str = "claude", base: Optional[Path] = None, gl
                                    if not (e["name"] == skill.name and e["target"] == target and e.get("global") == global_
                                            and e.get("base") == str(base or Path.cwd()))]
             ledger["installed"].append({"name": skill.name, "version": version or skill.version, "source": origin,
-                                        "target": target, "global": global_, "base": str(base or Path.cwd())})
+                                        "target": target, "global": global_, "base": str(base or Path.cwd()),
+                                        "digest": dir_digest(staged)})
             save_ledger(ledger)
         return {"name": skill.name, "version": version or skill.version, "target": target, "actions": actions,
                 "notes": notes, "source": origin}
@@ -210,3 +222,46 @@ def uninstall(name: str, target: str = "claude", base: Optional[Path] = None, gl
         e["name"] == name and e["target"] == target and e.get("global") == global_)]
     save_ledger(ledger)
     return done
+
+
+def update(name: Optional[str] = None, registry_url: Optional[str] = None, dry_run: bool = False) -> List[Dict[str, Any]]:
+    """Reinstall registry skills whose files changed in the registry."""
+    results: List[Dict[str, Any]] = []
+    indexes: Dict[str, Dict[str, Any]] = {}
+    for entry in list(load_ledger()["installed"]):
+        if name and entry["name"] != name:
+            continue
+        row: Dict[str, Any] = {"name": entry["name"], "target": entry["target"], "old_version": entry.get("version", ""),
+                               "new_version": entry.get("version", ""), "status": ""}
+        source = entry.get("source", "")
+        if not source.startswith("registry:"):
+            row["status"] = "skipped (not installed from a registry)"
+            results.append(row)
+            continue
+        src = registry_url or source[len("registry:"):]
+        try:
+            if src not in indexes:
+                indexes[src] = registry.load_index(src)
+            remote = registry.find(indexes[src], entry["name"])
+        except SkillError as exc:
+            row["status"] = "error: %s" % exc
+            results.append(row)
+            continue
+        if remote is None:
+            row["status"] = "no longer in the registry"
+            results.append(row)
+            continue
+        row["new_version"] = remote.get("version", "")
+        new_digest = files_digest([(f["path"], f["sha256"]) for f in remote.get("files", [])])
+        if new_digest == entry.get("digest"):
+            row["status"] = "up to date"
+        elif dry_run:
+            row["status"] = "update available"
+        else:
+            try:
+                install(entry["name"], entry["target"], Path(entry["base"]), bool(entry.get("global")), src)
+                row["status"] = "updated"
+            except InstallError as exc:
+                row["status"] = "failed: %s" % exc
+        results.append(row)
+    return results

@@ -1,0 +1,142 @@
+{
+  "entry": "scripts/inspect_jwt.py",
+  "cases": [
+    {
+      "name": "valid token with readable dates",
+      "kind": "happy",
+      "args": [
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.c2lnbmF0dXJl",
+        "--now",
+        "1700001000"
+      ],
+      "stdout_json": {
+        "alg": "HS256",
+        "typ": "JWT",
+        "issued_at": "2023-11-14T22:13:20Z",
+        "expires_at": "2023-11-14T23:13:20Z",
+        "expired": false,
+        "lifetime_seconds": 3600,
+        "warnings": [],
+        "payload": {
+          "sub": "123"
+        }
+      }
+    },
+    {
+      "name": "expired token",
+      "kind": "happy",
+      "args": [
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.c2lnbmF0dXJl",
+        "--now",
+        "1700009999"
+      ],
+      "stdout_json": {
+        "expired": true,
+        "warnings": [
+          "the token is expired"
+        ]
+      }
+    },
+    {
+      "name": "reads the token from stdin",
+      "kind": "edge",
+      "args": [
+        "--now",
+        "1700001000"
+      ],
+      "stdin": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.c2lnbmF0dXJl\n",
+      "stdout_json": {
+        "alg": "HS256",
+        "expired": false
+      }
+    },
+    {
+      "name": "alg none and empty signature",
+      "kind": "edge",
+      "args": [
+        "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ4IiwiZXhwIjoxNzAwMDAzNjAwfQ.",
+        "--now",
+        "1700001000"
+      ],
+      "stdout_json": {
+        "alg": "none",
+        "warnings": [
+          "alg is none: the token is unsigned",
+          "the signature is empty"
+        ]
+      }
+    },
+    {
+      "name": "no expiry",
+      "kind": "edge",
+      "args": [
+        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ4IiwiaWF0IjoxNzAwMDAwMDAwfQ.c2lnbmF0dXJl",
+        "--now",
+        "1700001000"
+      ],
+      "stdout_json": {
+        "expired": null,
+        "warnings": [
+          "no exp claim: the token never expires"
+        ]
+      }
+    },
+    {
+      "name": "very long lifetime",
+      "kind": "edge",
+      "args": [
+        "eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwNzc3NjAwMH0.c2lnbmF0dXJl",
+        "--now",
+        "1700001000"
+      ],
+      "stdout_json": {
+        "lifetime_seconds": 7776000,
+        "warnings": [
+          "lifetime is longer than 24 hours"
+        ]
+      }
+    },
+    {
+      "name": "not valid yet",
+      "kind": "edge",
+      "args": [
+        "eyJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE4MDAwMDAwMDAsImV4cCI6MTgwMDAwMzYwMCwiaWF0IjoxNzk5OTk5MDAwfQ.c2lnbmF0dXJl",
+        "--now",
+        "1700001000"
+      ],
+      "stdout_json": {
+        "warnings": [
+          "the token is not valid yet"
+        ]
+      }
+    },
+    {
+      "name": "never prints the signature",
+      "kind": "edge",
+      "args": [
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMzYwMH0.c2lnbmF0dXJl",
+        "--now",
+        "1700001000"
+      ],
+      "stdout_not_contains": "c2lnbmF0dXJl"
+    },
+    {
+      "name": "wrong number of parts",
+      "kind": "error",
+      "args": [
+        "abc.def"
+      ],
+      "expect_exit": 3,
+      "stderr_contains": "three dot separated parts"
+    },
+    {
+      "name": "payload is not json",
+      "kind": "error",
+      "args": [
+        "aGk.aGk.c2ln"
+      ],
+      "expect_exit": 3,
+      "stderr_contains": "not a valid JWT"
+    }
+  ]
+}

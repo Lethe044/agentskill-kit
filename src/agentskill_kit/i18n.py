@@ -41,6 +41,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "published": "Ready to publish {name}",
         "provider_missing": "No LLM provider is configured. See: askit providers",
         "threshold_note": "Quality gate: {threshold}",
+        "audit_title": "Installed skills",
+        "audit_summary": "{n} skill(s) audited: {r} risky, {v} to review",
     },
     "tr": {
         "no_skills": "{path} içinde skill bulunamadı",
@@ -74,6 +76,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "published": "{name} yayına hazır",
         "provider_missing": "Yapılandırılmış bir LLM sağlayıcı yok. Bkz: askit providers",
         "threshold_note": "Kalite eşiği: {threshold}",
+        "audit_title": "Kurulu skill'ler",
+        "audit_summary": "{n} skill denetlendi: {r} riskli, {v} gözden geçirilmeli",
     },
 }
 

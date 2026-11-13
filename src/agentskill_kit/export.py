@@ -37,6 +37,9 @@ TARGETS: Dict[str, Target] = {
     "copilot": Target("copilot", "GitHub Copilot instructions", "file", ".github/instructions"),
     "codex": Target("codex", "AGENTS.md (Codex and others)", "block", "AGENTS.md", "~/.codex/AGENTS.md"),
     "gemini": Target("gemini", "Gemini CLI GEMINI.md", "block", "GEMINI.md", "~/.gemini/GEMINI.md"),
+    "aider": Target("aider", "Aider CONVENTIONS.md", "block", "CONVENTIONS.md"),
+    "cline": Target("cline", "Cline rules", "file", ".clinerules"),
+    "roo": Target("roo", "Roo Code rules", "file", ".roo/rules"),
 }
 
 
@@ -77,6 +80,8 @@ def render_rule(skill: Skill, target: str, extras: bool) -> str:
         return "---\ntrigger: model_decision\ndescription: %s\n---\n\n%s\n" % (desc, body)
     if target == "copilot":
         return '---\napplyTo: "**"\n---\n\n# %s\n\n%s\n\n%s\n' % (skill.name, skill.description, body)
+    if target in ("cline", "roo"):
+        return "# %s\n\n%s\n\n%s\n" % (skill.name, skill.description, body)
     raise ExportError("no rule renderer for %s" % target)
 
 

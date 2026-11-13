@@ -14,11 +14,11 @@ Claude Code, Cursor, Codex, Gemini CLI and Hermes load when a task matches. It c
 generates new ones, and installs the same skill into every agent you use.
 
 - **Lint** a skill: name, description, structure. Works offline.
-- **Scan** it for prompt injection, hidden unicode, secrets and dangerous commands.
+- **Scan** it for prompt injection, hidden unicode, secrets and dangerous commands, and **audit** the skills you already installed.
 - **Test** it: run the tests that ship with the skill in an isolated folder.
 - **Forge** a new skill from a task description with any model, including free and local ones.
 - **Mine** your shell history for routines that should be skills.
-- **Export** one skill to Claude Code, Cursor, Windsurf, Copilot, Codex and Gemini CLI.
+- **Export** one skill to Claude Code, Cursor, Windsurf, Copilot, Codex, Gemini CLI, Aider, Cline and Roo Code.
 - **Share** skills through a static registry with checksums and a searchable website.
 
 No runtime dependencies. No paid service required. Python 3.9 or newer on Linux, macOS and Windows.
@@ -83,13 +83,14 @@ parts.
 | `askit init NAME` | Create a skill from a template, optionally with a script and tests |
 | `askit lint [PATH]` | Check SKILL.md structure (`--strict`, `--format json\|github`) |
 | `askit scan [PATH]` | Security scan (`--fail-on high\|medium\|low\|never`) |
+| `askit audit` | Scan the skills already installed for Claude Code and Hermes, or any folder with `--path` |
 | `askit test [PATH]` | Run `tests/cases.json` and `tests/test_*.py` of each skill |
 | `askit score [PATH]` | Combine lint, scan and tests into one score and a pass or fail gate |
 | `askit forge` | Generate a skill with a model, verify it and refine it until it passes |
-| `askit eval PATH` | Check how well a model follows a skill, with an optional baseline run |
+| `askit eval PATH` | Check how well a model follows a skill, with an optional baseline run and `--judge` |
 | `askit mine` | Find repeated workflows in shell history and draft skills |
 | `askit export PATH` | Convert and install a skill for another agent |
-| `askit search`, `install`, `uninstall`, `list` | Work with the registry, GitHub folders and local folders |
+| `askit search`, `install`, `update`, `uninstall`, `list` | Work with the registry, GitHub folders and local folders |
 | `askit pack`, `publish` | Bundle a skill, run the quality gate, prepare a pull request |
 | `askit registry build\|site` | Build a registry index or a static website |
 | `askit serve` | Browse the skills on your machine in a local web page |
@@ -162,12 +163,15 @@ Secrets are masked before anything is shown. See [docs/mining.md](docs/mining.md
 | `copilot` | `.github/instructions/<name>.instructions.md` |
 | `codex` | managed block in `AGENTS.md` |
 | `gemini` | managed block in `GEMINI.md` |
+| `aider` | managed block in `CONVENTIONS.md` |
+| `cline` | `.clinerules/<name>.md` |
+| `roo` | `.roo/rules/<name>.md` |
 
 Exports are repeatable: managed blocks are replaced, not duplicated. More in [docs/export-targets.md](docs/export-targets.md).
 
 ## Starter skills
 
-The registry ships 16 skills that pass every check. Nine of them include scripts with tests, so you can read how a
+The registry ships 27 skills that pass every check. Fifteen of them include scripts with tests, so you can read how a
 tested skill is built.
 
 | Skill | What it does |
@@ -177,13 +181,24 @@ tested skill is built.
 | `csv-profiler` | column types, missing values and ranges for a CSV |
 | `json-diff` | structural diff of two JSON files |
 | `dockerfile-linter` | unpinned images, root user, ADD vs COPY, secrets in ENV |
+| `docker-compose-reviewer` | privileged containers, mounted Docker socket, secrets in compose files |
 | `env-file-auditor` | `.env` against `.env.example`, without printing values |
+| `requirements-auditor` | unpinned and duplicate packages, URL installs and extra indexes |
 | `todo-extractor` | TODO, FIXME and HACK inventory of a source tree |
+| `markdown-link-checker` | broken relative links and heading anchors, offline |
 | `changelog-generator` | conventional commits to grouped release notes |
 | `api-endpoint-tester` | smoke test an API from a JSON file |
+| `openapi-summarizer` | overview of an OpenAPI or Swagger file, with unsecured operations |
+| `cron-explainer` | cron expressions in plain English, with validation |
+| `jwt-inspector` | decode a JWT, readable dates and risk warnings, no verification |
 | `commit-message-writer` | clear conventional commit messages |
 | `pr-description-writer` | pull request descriptions reviewers can use |
+| `git-conflict-resolver` | resolve merge and rebase conflicts by intent |
+| `unit-test-writer` | focused tests for normal cases, edge cases and failures |
+| `release-checklist` | a repeatable release routine from version bump to verification |
+| `incident-postmortem-writer` | blameless postmortems from incident notes |
 | `sql-query-reviewer` | safety, correctness and performance review of SQL |
+| `regex-explainer` | explain, build and test regular expressions |
 | `meeting-notes-to-actions` | decisions, owners and open questions from notes |
 | `readme-doctor` | what to fix in a README to get people to try a project |
 | `secure-code-review` | a security checklist with a report format |
@@ -247,9 +262,8 @@ training environment whose reward can use verified scores. See [integrations/her
 
 ## Roadmap
 
-- More scanner rules and a community rule pack.
+- A community rule pack for the scanner and more rules for non-Python scripts.
 - Translated rule messages (the interface is already available in Turkish and English).
-- `askit eval` with a judge model for open ended checks.
 - Skill dependencies and version constraints in the registry.
 - Export targets for more agents.
 

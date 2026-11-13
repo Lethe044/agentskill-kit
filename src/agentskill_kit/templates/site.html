@@ -143,7 +143,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px;paddin
   var DATA = JSON.parse(document.getElementById('askit-data').textContent);
   var skills = DATA.skills || [];
   var state = {q:'', tag:'', sort:'score', open:null, target:'claude'};
-  var TARGETS = ['claude','cursor','codex','copilot','windsurf','gemini','hermes'];
+  var TARGETS = ['claude','cursor','codex','copilot','windsurf','gemini','hermes','aider','cline','roo'];
   var $ = function(id){return document.getElementById(id)};
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function tokens(s){return String(s).toLowerCase().match(/[a-z0-9]+/g)||[]}

@@ -14,8 +14,12 @@ askit install changelog-generator --target claude --global
 askit install github:owner/repo/skills/my-skill@main    # any public GitHub folder
 askit install ./path/to/skill                           # a local folder
 askit list --installed
+askit update                                            # refresh installed registry skills
+askit update changelog-generator --dry-run
 askit uninstall changelog-generator
 ```
+
+`askit update` compares the checksums recorded at install time with the registry and reinstalls the skills that changed. Skills installed from a local folder or GitHub are skipped.
 
 Registry installs verify checksums, then run lint and scan on the download before anything is written.
 Set `GITHUB_TOKEN` to avoid GitHub API rate limits when installing from `github:` sources.

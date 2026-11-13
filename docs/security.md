@@ -11,8 +11,10 @@ The scanner reads every text file in a skill and reports findings with a rule id
 | --- | --- | --- |
 | SC001 to SC005 | high, medium | phrases that override instructions, hide actions from the user, jailbreak wording, requests to reveal the system prompt |
 | SC006 | high | invisible and bidirectional unicode characters |
+| SC008 | medium | chat template or role markers such as `<|im_start|>` and `[INST]` inside instructions |
+| SC009 | medium | links or images whose URL has a query string with a placeholder, a way to send data out |
 | SC007 | medium | instructions hidden in HTML comments |
-| SC101 to SC111 | high to low | `curl | sh`, recursive deletes of broad paths, sudo, `chmod 777`, decode and run, reverse shells, eval and exec, destructive disk commands, force push, installs from URLs |
+| SC101 to SC112 | high to low | `curl | sh` (also into python, node, perl, ruby, php and `eval "$(curl ...)"`), recursive deletes of broad paths, sudo, `chmod 777`, decode and run, reverse shells, eval and exec, destructive disk commands, force push, installs from URLs |
 | SC201 to SC206 | high, medium | AWS, GitHub, LLM provider, Slack, npm and PyPI tokens, private keys, hardcoded credentials |
 | SC301, SC302, SC310 | medium to high | reading credential files, sending data over the network, and both in one file |
 | SC303 | medium | raw IP URLs, link shorteners, request catchers and webhook endpoints |
@@ -20,6 +22,19 @@ The scanner reads every text file in a skill and reports findings with a rule id
 | SC601, SC602 | medium, low | bundled binaries and very large files |
 
 Severity decides the exit code: `askit scan --fail-on high` (the default) fails on any high finding.
+
+SC003 ignores prohibitions: "never change files without telling the user" is fine, "do this without telling the user" is flagged.
+
+### Auditing what you already have
+
+```bash
+askit audit                    # .claude/skills, .hermes/skills in this project and in your home folder
+askit audit --path ~/my-skills # any folder
+askit audit --fail-on medium
+```
+
+`audit` lints and scans every installed skill and shows one table, then the medium and high findings. It is the
+quickest way to check skills you installed before you had a scanner. The exit code follows `--fail-on`.
 
 ### Silencing a deliberate match
 

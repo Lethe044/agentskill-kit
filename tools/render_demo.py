@@ -89,12 +89,30 @@ def main():
         shutil.rmtree(work, ignore_errors=True)
 
     char_w, line_h, pad_x, top = 8.4, 20, 22, 54
-    width = int(max(len(l) for l in lines) * char_w + pad_x * 2 + 10)
-    width = max(width, 760)
+    width = max(int(max(len(l) for l in lines) * char_w + pad_x * 2 + 10), 760)
     height = int(top + len(lines) * line_h + 26)
+
+    # Timing: a command appears, its output follows line by line, then a short pause.
+    starts, t = [], 0.4
+    for line in lines:
+        if line.startswith("$ "):
+            t += 0.7
+        starts.append(t)
+        t += 0.09 if not line.startswith("$ ") else 0.5
+    cycle = t + 4.5
+
+    css = []
+    for i, start in enumerate(starts):
+        p0 = round(start / cycle * 100, 3)
+        css.append("@keyframes l%d{0%%,%.3f%%{opacity:0}%.3f%%,94%%{opacity:1}100%%{opacity:0}}"
+                   % (i, max(p0 - 0.001, 0), p0))
+        css.append(".l%d{animation:l%d %.2fs linear infinite}" % (i, i, cycle))
+    css.append("@media (prefers-reduced-motion:reduce){text{animation:none!important}}")
+
     parts = [
         '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" role="img" '
         'aria-label="Terminal session running askit lint, scan, test and forge">' % (width, height, width, height),
+        "<style>%s</style>" % "".join(css),
         '<rect width="%d" height="%d" rx="10" fill="#0f172a"/>' % (width, height),
         '<rect width="%d" height="36" rx="10" fill="#1e293b"/><rect y="26" width="%d" height="10" fill="#1e293b"/>' % (width, width),
         '<circle cx="22" cy="18" r="6" fill="#f87171"/><circle cx="42" cy="18" r="6" fill="#fbbf24"/>'
@@ -104,12 +122,12 @@ def main():
     ]
     for i, line in enumerate(lines):
         y = top + i * line_h
-        parts.append('<text x="%d" y="%d" fill="%s" font-family="Menlo,Consolas,\'DejaVu Sans Mono\',monospace" '
-                     'font-size="14" xml:space="preserve">%s</text>' % (pad_x, y, colour(line), html.escape(line)))
+        parts.append('<text class="l%d" x="%d" y="%d" fill="%s" font-family="Menlo,Consolas,\'DejaVu Sans Mono\',monospace" '
+                     'font-size="14" xml:space="preserve">%s</text>' % (i, pad_x, y, colour(line), html.escape(line)))
     parts.append("</svg>")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(parts) + "\n", encoding="utf-8")
-    print("wrote %s (%d lines)" % (OUT, len(lines)))
+    print("wrote %s (%d lines, %.1fs loop)" % (OUT, len(lines), cycle))
 
 
 if __name__ == "__main__":

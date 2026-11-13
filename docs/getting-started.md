@@ -31,6 +31,15 @@ askit score path/to/skill      # one number that combines all of the above
 Pass a folder that holds several skills and every skill inside it is checked.
 Without a path, `./skills` is used when it exists, otherwise the current folder.
 
+## Audit what is already installed
+
+```bash
+askit audit
+```
+
+This lints and scans the skills in `.claude/skills` and `.hermes/skills` (in this project and in your home folder).
+Use `--path` for another folder.
+
 ## Create a skill by hand
 
 ```bash

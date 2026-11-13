@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name": "plans edge cases and errors", "prompt": "Write pytest tests for this function.\n\ndef parse_duration(text):\n    units = {'h': 3600, 'm': 60, 's': 1}\n    total, num = 0, ''\n    for ch in text:\n        if ch.isdigit():\n            num += ch\n        elif ch in units and num:\n            total += int(num) * units[ch]\n            num = ''\n        else:\n            raise ValueError(text)\n    if num:\n        raise ValueError(text)\n    return total",
+     "must_include": ["pytest", "ValueError"], "regex": ["def test_\\w+"]},
+    {"name": "uses a literal expected value", "prompt": "Write a unit test for add(a, b) that returns a + b. Use pytest.",
+     "regex": ["assert add\\(2, 3\\) == 5|assert add\\(1, 2\\) == 3|== \\d+"], "must_not_include": ["assert add(a, b) == a + b"]}
+  ]
+}
